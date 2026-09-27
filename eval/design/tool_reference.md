@@ -334,3 +334,23 @@ The cheapest way to match all of the above exactly is to **fake the Google API c
 - the fake only has to reproduce Google's own behavior (search matching, value formatting, exclusive all-day ends, error texts above);
 - any later fix in `app_tools/` reaches the fake automatically;
 - this probe and `checks.py` can be pointed at the fake to compare it with the real thing.
+
+---
+
+## 9. Lab fidelity (the fake vs this account)
+
+The lab (`eval/lab`) runs the real `app_tools` functions against an in-memory Google API. The probe was run against both, and `eval/probe/compare.py` diffs them call by call with IDs, times and addresses masked.
+
+**Result (2026-09-27):**
+- Every probe call that doesn't depend on pre-existing account data returns the same text: Docs indices and tables, comments, sheet display values, conditional rules, Tasks listings, every error message.
+- `checks.py` passes 30/30 on both.
+
+**Known differences, all minor and deliberate:**
+
+| Difference | Why it stays |
+|---|---|
+| Gmail's *snippet* shows `₹1,84,500` as `₹1,84500`; the lab keeps the comma | No clear rule to copy; the full body (`read_email`) is identical |
+| Attendee order in event listings | Google itself returned different orders across runs |
+| `after:` / `before:` dates are read as Pacific midnight (12:30 IST) | Not confirmed on the real account; the seed keeps needles clear of both readings |
+| Drafts don't appear in `search_emails` | No task searches for drafts |
+| Nested tables in Docs are rejected | Real Docs allows them; no task needs one |

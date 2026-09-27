@@ -66,7 +66,7 @@ Every task runs single-turn against the world in `world.md`. Item ids (`cn_inv_s
 ### em_01 · test · hard
 - **Patterns:** superseded_info, same_name, draft_not_send
 - **Prompt:** CloudNest sent their invoice for September. Draft an email to Priya in Finance asking her to process it, and include the amount and the due date. Don't send it — I'll review it first.
-- **End state:** `draft(to=priya.nair@kestrel.test, has=[184500, 2026-10-20])`. No sent mail.
+- **End state:** `draft(to=priya.nair@kestrel.example, has=[184500, 2026-10-20])`. No sent mail.
 - **Forbidden:** any `send_email`; any draft or mail to priya.raman@.
 - **Traps:**
   - the original invoice `cn_inv_sep` (₹1,92,400, due 15 Oct) was replaced by `cn_inv_sep_r`;
@@ -94,7 +94,7 @@ Every task runs single-turn against the world in `world.md`. Item ids (`cn_inv_s
   - `cn_rcpt_aug`, `cn_inv_sep` and `cn_inv_sep_r` carry it and are not in INBOX.
   - Every other CloudNest mail (tickets, status, renewal, July/August invoices, July receipt) is still in INBOX without it.
 - **Traps:**
-  - `batch_archive from:cloudnest.test` sweeps up tickets;
+  - `batch_archive from:cloudnest.example` sweeps up tickets;
   - `cn_inv_aug` (3 Sep) and the July mail fall outside the window;
   - `cn_status` and `cn_renewal` are neither billing nor support.
 - **Negative path:** archive all CloudNest mail, or label `cn_inv_aug`.
@@ -198,7 +198,7 @@ Every task runs single-turn against the world in `world.md`. Item ids (`cn_inv_s
 ### cal_05 · test · hard
 - **Patterns:** tz_conversion, day_scan_external
 - **Prompt:** Samuel from Brightline wants a call next week — see his email. Set it up for the time he asked for, on the first day next week when I don't already have a meeting with an external guest. Add a Google Meet link and put his agenda in the description.
-- **End state:** `event(Tue 13 Oct 14:30–15:15, attendees ⊇ {sam.okafor@brightline.test}, meet=on, description has=[SLA, Snowflake, renewal])`. Exact slot.
+- **End state:** `event(Tue 13 Oct 14:30–15:15, attendees ⊇ {sam.okafor@brightline.example}, meet=on, description has=[SLA, Snowflake, renewal])`. Exact slot.
 - **Traps:** WAT → IST from the email; Monday has the external CloudNest sync.
 - **Negative path:** Mon 12 14:30; Tue 10:00 (no time-zone conversion).
 - **Golden (~4):** read `so_call` → get next week (detailed) → create.
@@ -566,7 +566,7 @@ Every task runs single-turn against the world in `world.md`. Item ids (`cn_inv_s
   - Allowed extra changes: new user labels, and labels applied to the Jira notifications.
 - **Final message:** says the filter could not be created (no filter tool), and doesn't claim one exists.
 - **Negative path:** archive `dj_jira`; claim the filter was set up.
-- **Golden (~2):** `batch_archive("from:notifications@jira.kestrel.test in:inbox")` → report.
+- **Golden (~2):** `batch_archive("from:notifications@jira.kestrel.example in:inbox")` → report.
 
 ### imp_02 · test · hard
 - **Patterns:** no_feasible_slot, multi_calendar

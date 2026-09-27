@@ -11,6 +11,7 @@ The one fake company all 40 tasks run against. The seed files are generated from
 1. **One consistent base seed.** Facts that exist only to confuse one task live in that task's `seed_additions` (§9), never in the base.
 2. **Every fact a task needs is findable with the tools.** No world knowledge is needed: time-zone offsets, rules and names are all written somewhere in the seed.
 3. **Nothing sits on a cut-off** (30 days old, ₹5,000, exactly half accepted) unless it is a named trap and the prompt states the rule.
+   - **Mail dated on a window's first day** arrives after 12:30 IST. The lab reads Gmail's `after:`/`before:` dates as Pacific midnight, which is 12:30 IST; this isn't confirmed on the real account, so needles stay clear of both readings.
 4. **"Used by"** on every seeded item lists the tasks that depend on it. After changing an item, re-validate those tasks.
 5. **Each person's calendar is derived from one event list:** an event appears on the calendar of every internal attendee, with that person's response.
 
@@ -20,14 +21,14 @@ The one fake company all 40 tasks run against. The seed files are generated from
 
 | | |
 |---|---|
-| Company | Kestrel Analytics, domain `kestrel.test` |
-| User | Yadeesh T, Engineering Manager, Platform team, `yadeesh@kestrel.test` |
+| Company | Kestrel Analytics, domain `kestrel.example` |
+| User | Yadeesh T, Engineering Manager, Platform team, `yadeesh@kestrel.example` |
 | Now (frozen) | **Wednesday 7 October 2026, 09:30 IST** (Asia/Kolkata, UTC+05:30) |
 | Locale | en_GB (sheets show dates as dd/mm/yyyy) |
 
 Context line used by every task:
 
-> You are an assistant acting for Yadeesh T (yadeesh@kestrel.test), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.
+> You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.
 
 ### Key dates
 
@@ -49,29 +50,29 @@ Context line used by every task:
 
 | Name | Email | Team | Role | Manager | Location |
 |---|---|---|---|---|---|
-| Yadeesh T | yadeesh@kestrel.test | Platform | Engineering Manager | Rahul Verma | Bengaluru |
-| Meera Pillai | meera.pillai@kestrel.test | Platform | Senior Engineer (Tech Lead) | Yadeesh T | Bengaluru |
-| Karthik Subramanian | karthik.s@kestrel.test | Platform | Engineer | Yadeesh T | Chennai |
-| Arjun Mehta | arjun.mehta@kestrel.test | Platform | Engineer | Yadeesh T | Bengaluru |
-| Neha Gupta | neha.gupta@kestrel.test | Platform | SRE Lead | Yadeesh T | Pune |
-| Vikram Rao | vikram.rao@kestrel.test | Platform | Engineer | Yadeesh T | Bengaluru |
-| Rahul Verma | rahul.verma@kestrel.test | Engineering | Director of Engineering | Kavita Menon | Bengaluru |
-| Farah Khan | farah.khan@kestrel.test | Product | Product Manager, Platform | Anil Kumar | Mumbai |
-| Priya Raman | priya.raman@kestrel.test | Design | Design Lead | Anil Kumar | Bengaluru |
-| Priya Nair | priya.nair@kestrel.test | Finance | Finance Business Partner | Suresh Iyer | Bengaluru |
-| Samantha Lee | samantha.lee@kestrel.test | People | People Partner | Suresh Iyer | Bengaluru |
-| Rohan Kapoor | rohan.kapoor@kestrel.test | Security | Security Engineer | Rahul Verma | Delhi |
-| Deepak Joshi | deepak.joshi@kestrel.test | IT | IT Operations | Suresh Iyer | Bengaluru |
-| Isha Bhatt | isha.bhatt@kestrel.test | Operations | Office & Events Coordinator | Suresh Iyer | Bengaluru |
-| Ananya Das | ananya.das@kestrel.test | Platform | Engineer (joins Mon 12 Oct) | Yadeesh T | Bengaluru |
+| Yadeesh T | yadeesh@kestrel.example | Platform | Engineering Manager | Rahul Verma | Bengaluru |
+| Meera Pillai | meera.pillai@kestrel.example | Platform | Senior Engineer (Tech Lead) | Yadeesh T | Bengaluru |
+| Karthik Subramanian | karthik.s@kestrel.example | Platform | Engineer | Yadeesh T | Chennai |
+| Arjun Mehta | arjun.mehta@kestrel.example | Platform | Engineer | Yadeesh T | Bengaluru |
+| Neha Gupta | neha.gupta@kestrel.example | Platform | SRE Lead | Yadeesh T | Pune |
+| Vikram Rao | vikram.rao@kestrel.example | Platform | Engineer | Yadeesh T | Bengaluru |
+| Rahul Verma | rahul.verma@kestrel.example | Engineering | Director of Engineering | Kavita Menon | Bengaluru |
+| Farah Khan | farah.khan@kestrel.example | Product | Product Manager, Platform | Anil Kumar | Mumbai |
+| Priya Raman | priya.raman@kestrel.example | Design | Design Lead | Anil Kumar | Bengaluru |
+| Priya Nair | priya.nair@kestrel.example | Finance | Finance Business Partner | Suresh Iyer | Bengaluru |
+| Samantha Lee | samantha.lee@kestrel.example | People | People Partner | Suresh Iyer | Bengaluru |
+| Rohan Kapoor | rohan.kapoor@kestrel.example | Security | Security Engineer | Rahul Verma | Delhi |
+| Deepak Joshi | deepak.joshi@kestrel.example | IT | IT Operations | Suresh Iyer | Bengaluru |
+| Isha Bhatt | isha.bhatt@kestrel.example | Operations | Office & Events Coordinator | Suresh Iyer | Bengaluru |
+| Ananya Das | ananya.das@kestrel.example | Platform | Engineer (joins Mon 12 Oct) | Yadeesh T | Bengaluru |
 
 - **Ananya's address appears only in Samantha's welcome email** (`sl_welcome`), not in the Team Directory. Used by cal_01, x_02.
 - **Direct reports** (Manager = Yadeesh T in the Team Directory): Meera, Karthik, Arjun Mehta, Neha, Vikram.
 - **External people:**
-  - Samuel Okafor (`sam.okafor@brightline.test`, Head of Data, Brightline Retail, Lagos)
-  - Arjun Iyer (`arjun.iyer@cloudnest.test`, Account Manager, CloudNest)
-  - CloudNest Billing (`billing@cloudnest.test`), Support (`support@cloudnest.test`), Status (`status@cloudnest.test`)
-  - Linh Tran (`linh.tran@observa.test`, Observa)
+  - Samuel Okafor (`sam.okafor@brightline.example`, Head of Data, Brightline Retail, Lagos)
+  - Arjun Iyer (`arjun.iyer@cloudnest.example`, Account Manager, CloudNest)
+  - CloudNest Billing (`billing@cloudnest.example`), Support (`support@cloudnest.example`), Status (`status@cloudnest.example`)
+  - Linh Tran (`linh.tran@observa.example`, Observa)
 - **Name collisions (deliberate):**
 
 | Collision | People |
@@ -91,10 +92,10 @@ Email display names follow `Name <address>`. Priya Nair signs `Priya Nair | Fina
 
 | id | summary | accessRole |
 |---|---|---|
-| yadeesh@kestrel.test | Yadeesh T | owner (primary) |
+| yadeesh@kestrel.example | Yadeesh T | owner (primary) |
 | c_interviews_kestrel@group.calendar.google.com | Interviews | writer |
 | c_holidays_kestrel@group.calendar.google.com | Kestrel Holidays (India) | reader |
-| meera.pillai@ / karthik.s@ / neha.gupta@ / arjun.mehta@ / vikram.rao@ / rahul.verma@ / farah.khan@ / rohan.kapoor@ (kestrel.test) | the person's name | reader |
+| meera.pillai@ / karthik.s@ / neha.gupta@ / arjun.mehta@ / vikram.rao@ / rahul.verma@ / farah.khan@ / rohan.kapoor@ (kestrel.example) | the person's name | reader |
 
 ### 3.2 Conventions
 - **Organizer:** events Yadeesh organizes list him as an attendee, `accepted`, marked organizer. That's what makes "(organizer)" show (`tool_reference` §3.1). The same applies to events other people organize.
@@ -103,7 +104,7 @@ Email display names follow `Name <address>`. Priya Nair signs `Priya Nair | Fina
 - **Recurring series:** stored as individual instances (the tools only ever see instances). Instance IDs look like `<series>_<yyyymmdd>`.
 - **Events organized by Yadeesh have a description only where listed below.**
 
-### 3.3 Recurring series (instances generated from 21 Sep to 13 Nov)
+### 3.3 Recurring series (instances generated from 28 Sep to 6 Nov)
 
 | Series | When | Organizer | Guests | Skipped on |
 |---|---|---|---|---|
@@ -244,7 +245,7 @@ Verified by brute force over 15-minute starts; the Phase 2 seed check repeats th
 
 ### 3.6 Interviews calendar
 
-Organizer `recruiting@kestrel.test`; Yadeesh accepted; the candidate is an external guest.
+Organizer `recruiting@kestrel.example`; Yadeesh accepted; the candidate is an external guest.
 
 | Date | Time | Title | Used by |
 |---|---|---|---|
@@ -267,7 +268,7 @@ Used by: x_09 (Mon 19 and Tue 20 → the handover moves to Wed 21).
 
 ### 3.8 Filler
 
-The weeks of 21 Sep and 28 Sep, and 19 Oct onward, get the recurring series plus 2–4 ordinary internal meetings per weekday. Filler never touches the key days above and never uses the titles Architecture Review, PRD Review, Budget, Brightline, Interview or Capacity.
+28 Sep – 6 Oct and 19 Oct – 6 Nov get 1–2 ordinary meetings per weekday among colleagues. Yadeesh is never a filler guest, which keeps his busiest possible calendar listing under 50k characters (checked: 48.8k). Filler never touches the key days above (7–16 Oct, 2 Nov) or holidays, and never uses the titles Architecture Review, PRD Review, Budget, Brightline, Interview or Capacity.
 
 ---
 
@@ -283,9 +284,9 @@ System labels behave as in `tool_reference` §2.4. Notifications (Jira, GitHub, 
 
 | id | Criteria | Action | Used by |
 |---|---|---|---|
-| f_rohan | from `rohan.kapoor@kestrel.test` | add `Security`, remove `INBOX` | em_04 (the mistake) |
-| f_newstack | from `digest@thenewstack.test` | add `Newsletters`, remove `INBOX` | em_04 (keep) |
-| f_medium | from `noreply@medium.test` | add `Reading`, remove `INBOX` | em_04 (keep) |
+| f_rohan | from `rohan.kapoor@kestrel.example` | add `Security`, remove `INBOX` | em_04 (the mistake) |
+| f_newstack | from `digest@thenewstack.example` | add `Newsletters`, remove `INBOX` | em_04 (keep) |
+| f_medium | from `noreply@medium.example` | add `Reading`, remove `INBOX` | em_04 (keep) |
 
 ### 4.3 Needle emails
 
@@ -332,7 +333,7 @@ Neha never replied. Karthik hasn't sent his draft (Monday 5 Oct has passed).
 | ex_m_books | 29 Sep 11:30 | Meera | Expense approval: technical books (₹5,000) | no → approve (boundary, stated in prompt) |
 | ex_m_monitor | 2 Oct 10:15 | Meera | Expense approval: monitor (₹12,500) | no → receipt |
 | ex_k_cab | 5 Oct 17:40 | Karthik | Expense approval: cab to client site (₹780) | no → approve |
-| hr_reimb | 3 Oct 09:00 | no-reply@kestrel.test (Kestrel HR Portal) | Your expense report ER-1182 has been reimbursed | not a request |
+| hr_reimb | 3 Oct 09:00 | no-reply@kestrel.example (Kestrel HR Portal) | Your expense report ER-1182 has been reimbursed | not a request |
 
 Each request body: `Hi Yadeesh, please approve my expense: <item>, <amount>. Receipt available on request.`
 
@@ -375,7 +376,7 @@ Each request body: `Hi Yadeesh, please approve my expense: <item>, <amount>. Rec
 
 | id | When | From | Subject | Body (key text) | State | Used by |
 |---|---|---|---|---|---|---|
-| sl_welcome | 2 Oct 16:20 | Samantha Lee | New joiner: Ananya Das starts Mon 12 Oct | Hi Yadeesh, Ananya Das joins the Platform team as an Engineer on Monday 12 October. Her work email is ananya.das@kestrel.test. Her onboarding buddy will be Vikram Rao. HR induction runs 10:00–13:00 on her first day. / Thanks, Samantha | I | cal_01, x_02 |
+| sl_welcome | 2 Oct 16:20 | Samantha Lee | New joiner: Ananya Das starts Mon 12 Oct | Hi Yadeesh, Ananya Das joins the Platform team as an Engineer on Monday 12 October. Her work email is ananya.das@kestrel.example. Her onboarding buddy will be Vikram Rao. HR induction runs 10:00–13:00 on her first day. / Thanks, Samantha | I | cal_01, x_02 |
 | ne_swap | 5 Oct 19:10 | Neha Gupta | On-call swap? | Hi Yadeesh, could I swap my on-call week of 19 Oct with Arjun's week of 26 Oct? I have a family function on the 20th. Arjun is fine with it. / — Neha | I, U | x_01, em_06 (mark read) |
 | me_canary | 6 Oct 17:30 | Meera Pillai | Mesh canary looks good | Canary at 5% for 24h, error rate flat. Planning 25% on Monday. | I, U | em_06 (mark read) |
 | ka_capq | 6 Oct 11:45 | Karthik Subramanian | Question on the capacity model | Should the capacity model include the Observa trial nodes? | I, U | em_06 (mark read) |
@@ -394,9 +395,9 @@ Each request body: `Hi Yadeesh, please approve my expense: <item>, <amount>. Rec
 
 | Sender | Count | Unread ones | Used by |
 |---|---|---|---|
-| Jira `notifications@jira.kestrel.test` | 12 (14 Sep – 7 Oct), subjects `[JIRA] PLAT-3xx/4xx ...` | jr_401 (1 Oct, last week), jr_412 (5 Oct 09:12), jr_415 (7 Oct 08:10) | imp_01 (archive all 12), em_06 (jr_412, jr_415) |
-| GitHub `noreply@github.test` | 10 | gh_881 (6 Oct 13:05, "[kestrel/platform] PR #881 merged") | em_06 |
-| HR portal `no-reply@kestrel.test` | 4 (incl. hr_reimb) | hr_timesheet (6 Oct 09:00, "Reminder: submit your timesheet") | em_06 |
+| Jira `notifications@jira.kestrel.example` | 12 (14 Sep – 7 Oct), subjects `[JIRA] PLAT-3xx/4xx ...` | jr_401 (1 Oct, last week), jr_412 (5 Oct 14:12), jr_415 (7 Oct 08:10) | imp_01 (archive all 12), em_06 (jr_412, jr_415) |
+| GitHub `noreply@github.example` | 10 | gh_881 (6 Oct 13:05, "[kestrel/platform] PR #881 merged") | em_06 |
+| HR portal `no-reply@kestrel.example` | 4 (incl. hr_reimb) | hr_timesheet (6 Oct 09:00, "Reminder: submit your timesheet") | em_06 |
 
 **Unread mail this week, for em_06.**
 
@@ -412,8 +413,8 @@ Nothing else dated 5–7 Oct is unread. jr_401 (1 Oct) is unread but last week.
 ### 4.4 Filler (~120 messages, generated with a fixed random seed)
 
 - **Internal threads (~50):** status updates, questions and FYIs among the people above, 14 Sep – 7 Oct, read.
-- **Newsletters (~20):** `digest@thenewstack.test` (label Newsletters) and `noreply@medium.test` (label Reading), archived by their filters.
-- **Other vendors (~10):** Observa (`linh.tran@observa.test`), a recruiting agency (`talent@hirewell.test`); Brightline filler (label `Clients/Brightline`).
+- **Newsletters (~20):** `digest@thenewstack.example` (label Newsletters) and `noreply@medium.example` (label Reading), archived by their filters.
+- **Other vendors (~10):** Observa (`linh.tran@observa.example`), a recruiting agency (`talent@hirewell.example`); Brightline filler (label `Clients/Brightline`).
 - **Sent mail (~15):** Yadeesh's replies.
 - **Filler must never:**
   - add another expense approval, CloudNest invoice or receipt, OKR draft, Rohan mail or Jira notification;
@@ -675,23 +676,23 @@ Conditional rules on Line Items. Used by sh_02.
 
 | Row | Timestamp | Name | Email | Attending | Dietary | From |
 |---|---|---|---|---|---|---|
-| 2 | 25/09/2026 10:12 | Meera Pillai | meera.pillai@kestrel.test | Yes | Vegetarian | Bengaluru |
-| 3 | 25/09/2026 10:40 | Karthik Subramanian | karthik.s@kestrel.test | Y | Non-vegetarian | Chennai |
-| 4 | 25/09/2026 11:05 | Neha Gupta | neha.gupta@kestrel.test | yes | Vegetarian | Pune |
-| 5 | 25/09/2026 12:30 | Arjun Mehta | arjun.mehta@kestrel.test | TRUE | Non-vegetarian | Bengaluru |
-| 6 | 25/09/2026 14:02 | Vikram Rao | vikram.rao@kestrel.test | No | | Bengaluru |
-| 7 | 25/09/2026 15:20 | Priya Raman | priya.raman@kestrel.test | Yes | Vegan | Bengaluru |
-| 8 | 26/09/2026 09:15 | Farah Khan | farah.khan@kestrel.test | yes | Jain | Mumbai |
-| 9 | 26/09/2026 10:00 | Rahul Verma | rahul.verma@kestrel.test | Yes | Non-vegetarian | Bengaluru |
-| 10 | 26/09/2026 11:45 | Rohan Kapoor | rohan.kapoor@kestrel.test | N | Non-vegetarian | Delhi |
-| 11 | 26/09/2026 16:30 | Deepak Joshi | deepak.joshi@kestrel.test | FALSE | | Bengaluru |
-| 12 | 27/09/2026 08:50 | Isha Bhatt | isha.bhatt@kestrel.test | Yes | Vegetarian | Bengaluru |
-| 13 | 28/09/2026 09:05 | Samantha Lee | samantha.lee@kestrel.test | yes | | Bengaluru |
-| 14 | 29/09/2026 10:20 | Vikram Rao | Vikram.Rao@kestrel.test | yes | Non-vegetarian | Bengaluru |
-| 15 | 29/09/2026 13:10 | Meera Pillai | meera.pillai@kestrel.test | Yes | Vegan | Bengaluru |
-| 16 | 30/09/2026 18:45 | Rohan Kapoor | rohan.kapoor@kestrel.test | y | Non-vegetarian | Delhi |
-| 17 | 01/10/2026 09:30 | Priya Nair | priya.nair@kestrel.test | No | | Bengaluru |
-| 18 | 02/10/2026 11:00 | Karthik Subramanian | KARTHIK.S@kestrel.test | no | Non-vegetarian | Chennai |
+| 2 | 25/09/2026 10:12 | Meera Pillai | meera.pillai@kestrel.example | Yes | Vegetarian | Bengaluru |
+| 3 | 25/09/2026 10:40 | Karthik Subramanian | karthik.s@kestrel.example | Y | Non-vegetarian | Chennai |
+| 4 | 25/09/2026 11:05 | Neha Gupta | neha.gupta@kestrel.example | yes | Vegetarian | Pune |
+| 5 | 25/09/2026 12:30 | Arjun Mehta | arjun.mehta@kestrel.example | TRUE | Non-vegetarian | Bengaluru |
+| 6 | 25/09/2026 14:02 | Vikram Rao | vikram.rao@kestrel.example | No | | Bengaluru |
+| 7 | 25/09/2026 15:20 | Priya Raman | priya.raman@kestrel.example | Yes | Vegan | Bengaluru |
+| 8 | 26/09/2026 09:15 | Farah Khan | farah.khan@kestrel.example | yes | Jain | Mumbai |
+| 9 | 26/09/2026 10:00 | Rahul Verma | rahul.verma@kestrel.example | Yes | Non-vegetarian | Bengaluru |
+| 10 | 26/09/2026 11:45 | Rohan Kapoor | rohan.kapoor@kestrel.example | N | Non-vegetarian | Delhi |
+| 11 | 26/09/2026 16:30 | Deepak Joshi | deepak.joshi@kestrel.example | FALSE | | Bengaluru |
+| 12 | 27/09/2026 08:50 | Isha Bhatt | isha.bhatt@kestrel.example | Yes | Vegetarian | Bengaluru |
+| 13 | 28/09/2026 09:05 | Samantha Lee | samantha.lee@kestrel.example | yes | | Bengaluru |
+| 14 | 29/09/2026 10:20 | Vikram Rao | Vikram.Rao@kestrel.example | yes | Non-vegetarian | Bengaluru |
+| 15 | 29/09/2026 13:10 | Meera Pillai | meera.pillai@kestrel.example | Yes | Vegan | Bengaluru |
+| 16 | 30/09/2026 18:45 | Rohan Kapoor | rohan.kapoor@kestrel.example | y | Non-vegetarian | Delhi |
+| 17 | 01/10/2026 09:30 | Priya Nair | priya.nair@kestrel.example | No | | Bengaluru |
+| 18 | 02/10/2026 11:00 | Karthik Subramanian | KARTHIK.S@kestrel.example | no | Non-vegetarian | Chennai |
 
 **Latest answer per person** (sh_03), 13 people:
 - **Attending (10):** Meera (Vegan), Neha (Vegetarian), Arjun (Non-vegetarian), Vikram (Non-vegetarian), Priya Raman (Vegan), Farah (Jain), Rahul (Non-vegetarian), Rohan (Non-vegetarian), Isha (Vegetarian), Samantha (blank → None).
