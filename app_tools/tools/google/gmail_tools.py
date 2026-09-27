@@ -680,25 +680,26 @@ async def search_by_label(label_id: str) -> dict[str, Any]:
 
     try:
         service = get_service()
-        query = f"label:{request.label_id}"
+        # Filter by label ID directly: a "label:" search query only matches
+        # label names, so it never finds user labels by ID.
+        label_ids = [request.label_id]
 
         response = await asyncio.to_thread(
-            service.users().messages().list(userId="me", q=query).execute
+            service.users().messages().list(userId="me", labelIds=label_ids).execute
         )
 
         messages = []
-        if "messages" in response:
-            messages.extend(response["messages"])
+        messages.extend(response.get("messages", []))
 
         while "nextPageToken" in response:
             page_token = response["nextPageToken"]
             response = await asyncio.to_thread(
                 service.users()
                 .messages()
-                .list(userId="me", q=query, pageToken=page_token)
+                .list(userId="me", labelIds=label_ids, pageToken=page_token)
                 .execute
             )
-            messages.extend(response["messages"])
+            messages.extend(response.get("messages", []))
 
         return SearchByLabelResponse(
             count=len(messages), messages=messages
@@ -1115,8 +1116,9 @@ async def delete_label(label_id: str) -> dict[str, Any]:
 
     try:
         service = get_service()
+        # LabelRequest stores the validated ID in `name`.
         await asyncio.to_thread(
-            service.users().labels().delete(userId="me", id=request.label_id).execute
+            service.users().labels().delete(userId="me", id=request.name).execute
         )
 
         logger.info(f"Label deleted: {label_id}")

@@ -7,6 +7,7 @@ import pytz
 
 import re
 import html
+import unicodedata
 from config.settings import CHECKPOINT_DB
 
 
@@ -14,8 +15,16 @@ def clean_email_body(text: str) -> str:
     # 1. Decode HTML entities (e.g., convert &#39; to ')
     text = html.unescape(text)
 
-    # 2. Strip ZWNJ and other invisible junk
-    text = re.sub(r"[^\x20-\x7e]", r"", text)
+    # 2. Strip ZWNJ and other invisible junk: format/control characters plus the
+    #    combining grapheme joiner used as preheader padding. Whitespace stays for
+    #    step 4 (so lines don't run together) and visible text such as ₹, — and
+    #    accented letters is kept.
+    text = "".join(
+        ch
+        for ch in text
+        if ch.isspace()
+        or (unicodedata.category(ch) not in ("Cf", "Cc") and ch != "͏")
+    )
 
     # 3. Remove repeated special characters (like those divider lines -----)
     text = re.sub(r"[-*=_]{3,}", " ", text)

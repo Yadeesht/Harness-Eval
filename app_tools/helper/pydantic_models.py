@@ -483,6 +483,7 @@ class GetTaskListResponse(BaseModel):
     """Get task list response"""
 
     status: str
+    message: str = ""
     task_list: Optional[TaskListInfo] = None
     error: Optional[str] = None
 
@@ -516,7 +517,7 @@ class UpdateTaskListResponse(BaseModel):
 
     status: str
     message: str
-    task_list_id: str
+    task_list_id: Optional[str] = None
     error: Optional[str] = None
 
 
@@ -618,7 +619,7 @@ class UpdateTaskResponse(BaseModel):
 
     status: str
     message: str
-    task_id: str
+    task_id: Optional[str] = None
     error: Optional[str] = None
 
 

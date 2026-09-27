@@ -159,27 +159,6 @@ def _apply_transparency_if_valid(
         )
 
 
-def _preserve_existing_fields(
-    event_body: Dict[str, Any],
-    existing_event: Dict[str, Any],
-    field_mappings: Dict[str, Any],
-) -> None:
-    """
-    Helper function to preserve existing event fields when not explicitly provided.
-
-    Args:
-        event_body: The event body being built for the API call
-        existing_event: The existing event data from the API
-        field_mappings: Dict mapping field names to their new values (None means preserve existing)
-    """
-    for field_name, new_value in field_mappings.items():
-        if new_value is None and field_name in existing_event:
-            event_body[field_name] = existing_event[field_name]
-            logger.info(f"[modify_event] Preserving existing {field_name}")
-        elif new_value is not None:
-            event_body[field_name] = new_value
-
-
 def _format_attendee_details(
     attendees: List[Dict[str, Any]], indent: str = "  "
 ) -> str:
@@ -642,6 +621,9 @@ async def create_event(
     """
     # Validate input parameters
     try:
+        if isinstance(reminders, str):
+            # The docstring allows a JSON string; the request model needs a list.
+            reminders = json.loads(reminders)
         request = CreateEventRequest(
             summary=summary,
             start_time=start_time,
@@ -901,6 +883,9 @@ async def modify_event(
     """
     # Validate input parameters
     try:
+        if isinstance(reminders, str):
+            # The docstring allows a JSON string; the request model needs a list.
+            reminders = json.loads(reminders)
         request = ModifyEventRequest(
             event_id=event_id,
             calendar_id=calendar_id,
@@ -1002,7 +987,7 @@ async def modify_event(
         # Handle transparency validation
         _apply_transparency_if_valid(event_body, request.transparency, "modify_event")
 
-        if not event_body:
+        if not event_body and request.add_google_meet is None:
             message = "No fields provided to modify the event."
             logger.warning(f"[modify_event] {message}")
             raise Exception(message)
@@ -1025,17 +1010,7 @@ async def modify_event(
                 "[modify_event] Successfully retrieved existing event before update"
             )
 
-            # Preserve existing fields if not provided in the update
-            _preserve_existing_fields(
-                event_body,
-                existing_event,
-                {
-                    "summary": request.summary,
-                    "description": request.description,
-                    "location": request.location,
-                    "attendees": request.attendees,
-                },
-            )
+            # Fields not in event_body are left as they are by the patch below.
 
             # Handle Google Meet conference data
             if request.add_google_meet is not None:
@@ -1052,8 +1027,8 @@ async def modify_event(
                         f"[modify_event] Adding Google Meet conference with request ID: {request_id}"
                     )
                 else:
-                    # Remove Google Meet by setting conferenceData to empty
-                    event_body["conferenceData"] = {}
+                    # Remove Google Meet: null clears the field in a patch
+                    event_body["conferenceData"] = None
                     logger.info("[modify_event] Removing Google Meet conference")
             elif "conferenceData" in existing_event:
                 # Preserve existing conference data if not specified
@@ -1072,11 +1047,12 @@ async def modify_event(
                     f"[modify_event] Error during pre-update verification, but proceeding with update: {get_error}"
                 )
 
-        # Proceed with the update
+        # Proceed with the update. patch changes only the fields in the body;
+        # update would replace the whole event and reject a body without times.
         updated_event = await asyncio.to_thread(
             lambda: (
                 service.events()
-                .update(
+                .patch(
                     calendarId=request.calendar_id,
                     eventId=request.event_id,
                     body=event_body,

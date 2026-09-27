@@ -151,7 +151,7 @@ async def _read_comments_impl(service, app_name: str, file_id: str) -> str:
     if not comments:
         return f"No comments found in {app_name} {file_id}"
 
-    output = [f"Found {len(comments)} comments in {app_name} {file_id}:\\n"]
+    output = [f"Found {len(comments)} comments in {app_name} {file_id}:\n"]
 
     for comment in comments:
         author = comment.get("author", {}).get("displayName", "Unknown")
@@ -182,7 +182,7 @@ async def _read_comments_impl(service, app_name: str, file_id: str) -> str:
 
         output.append("")  # Empty line between comments
 
-    return "\\n".join(output)
+    return "\n".join(output)
 
 
 async def _create_comment_impl(
@@ -207,7 +207,7 @@ async def _create_comment_impl(
     author = comment.get("author", {}).get("displayName", "Unknown")
     created = comment.get("createdTime", "")
 
-    return f"Comment created successfully!\\nComment ID: {comment_id}\\nAuthor: {author}\\nCreated: {created}\\nContent: {comment_content}"
+    return f"Comment created successfully!\nComment ID: {comment_id}\nAuthor: {author}\nCreated: {created}\nContent: {comment_content}"
 
 
 async def _reply_to_comment_impl(
@@ -235,7 +235,7 @@ async def _reply_to_comment_impl(
     author = reply.get("author", {}).get("displayName", "Unknown")
     created = reply.get("createdTime", "")
 
-    return f"Reply posted successfully!\\nReply ID: {reply_id}\\nAuthor: {author}\\nCreated: {created}\\nContent: {reply_content}"
+    return f"Reply posted successfully!\nReply ID: {reply_id}\nAuthor: {author}\nCreated: {created}\nContent: {reply_content}"
 
 
 async def _resolve_comment_impl(
@@ -263,4 +263,4 @@ async def _resolve_comment_impl(
     author = reply.get("author", {}).get("displayName", "Unknown")
     created = reply.get("createdTime", "")
 
-    return f"Comment {comment_id} has been resolved successfully.\\nResolve reply ID: {reply_id}\\nAuthor: {author}\\nCreated: {created}"
+    return f"Comment {comment_id} has been resolved successfully.\nResolve reply ID: {reply_id}\nAuthor: {author}\nCreated: {created}"
