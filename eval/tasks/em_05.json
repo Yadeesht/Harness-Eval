@@ -1,0 +1,22 @@
+{
+  "id": "em_05",
+  "split": "dev",
+  "difficulty": "extreme",
+  "category": "email",
+  "apps": ["gmail"],
+  "patterns": ["sent_folder_check", "threshold_boundary", "date_window", "merge_per_person", "automated_distractor"],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Go through the expense approval requests people sent me in September and October. For each request I haven't answered yet (check my Sent mail), approve it if the amount is ₹5,000 or less, and ask for the receipt if it's more. Send one email per person that covers all of their pending requests.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {"check": "sent", "to": "neha.gupta@kestrel.example", "has": ["approv", ["taxi", {"amount": 1850}]]},
+      {"check": "sent", "to": "arjun.mehta@kestrel.example", "has": ["receipt", ["conference", {"amount": 18000}]]},
+      {"check": "sent", "to": "meera.pillai@kestrel.example", "has": ["approv", "receipt", ["books", {"amount": 5000}], ["monitor", {"amount": 12500}]]},
+      {"check": "sent", "to": "karthik.s@kestrel.example", "has": ["approv", ["cab", {"amount": 780}]]}
+    ],
+    "forbidden": []
+  },
+  "notes": "Not graded by code: which of Meera's two items gets approved vs asked for a receipt (both words must appear). Vikram (August), Karthik's answered lunch and the HR no-reply mail must get nothing: any extra sent mail is an unexpected change."
+}

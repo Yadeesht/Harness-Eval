@@ -1,0 +1,112 @@
+{
+  "id": "x_05",
+  "split": "test",
+  "difficulty": "medium",
+  "category": "cross_app",
+  "apps": [
+    "calendar",
+    "sheets"
+  ],
+  "patterns": [
+    "date_window",
+    "secondary_calendar"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Update the 'Hiring Pipeline' sheet with last week's interviews from my 'Interviews' calendar: for each candidate I interviewed last week, set Stage to 'Onsite done' and Interviewer to 'Yadeesh' — unless their stage is already 'Offer' or 'Rejected'.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "book",
+        "wid": "sh_pipeline",
+        "tabs": {
+          "Candidates": {
+            "grid": [
+              [
+                "Candidate",
+                "Role",
+                "Stage",
+                "Interviewer",
+                "Next step",
+                "Next step date"
+              ],
+              [
+                "Divya Menon",
+                "Frontend Engineer",
+                "Onsite done",
+                [
+                  "Yadeesh",
+                  "Yadeesh T"
+                ],
+                "Onsite interview",
+                "29/09/2026"
+              ],
+              [
+                "Karan Shah",
+                "SRE",
+                "Offer",
+                "Meera Pillai",
+                "Offer call",
+                "09/10/2026"
+              ],
+              [
+                "Lakshmi Iyer",
+                "Backend Engineer",
+                "Onsite done",
+                [
+                  "Yadeesh",
+                  "Yadeesh T"
+                ],
+                "Onsite interview",
+                "01/10/2026"
+              ],
+              [
+                "Rakesh Pillai",
+                "Backend Engineer",
+                "Onsite scheduled",
+                "",
+                "Onsite interview",
+                "05/10/2026"
+              ],
+              [
+                "Rakesh Pillay",
+                "Data Engineer",
+                "Phone screen",
+                "Neha Gupta",
+                "Phone screen",
+                "12/10/2026"
+              ],
+              [
+                "Arvind Rao",
+                "SRE",
+                "Rejected",
+                "Neha Gupta",
+                "—",
+                ""
+              ],
+              [
+                "Meghna Das",
+                "Frontend Engineer",
+                "Applied",
+                "",
+                "Resume review",
+                "14/10/2026"
+              ],
+              [
+                "Sanjay Kulkarni",
+                "Senior SRE",
+                "Onsite done",
+                "Neha Gupta",
+                "Debrief",
+                "12/10/2026"
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "Last week = Mon 28 Sep - Fri 2 Oct: Divya (29 Sep), Karan (30 Sep, already Offer), Lakshmi (1 Oct). Rakesh Pillai (5 Oct) is this week; Arvind Rao (24 Sep) is before last week."
+}

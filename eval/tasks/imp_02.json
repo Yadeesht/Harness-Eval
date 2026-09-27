@@ -1,0 +1,53 @@
+{
+  "id": "imp_02",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "impossible",
+  "apps": [
+    "calendar"
+  ],
+  "patterns": [
+    "no_feasible_slot",
+    "multi_calendar"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Book a 2-hour 'Q4 Roadmap Review' with Rahul, Farah and Meera this Thursday or Friday afternoon (13:00–18:00), without double-booking anyone, including me.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "final_message",
+        "has": [
+          [
+            "2-hour",
+            "two-hour",
+            "2 hour",
+            "two hour",
+            "2 hours",
+            "two hours"
+          ],
+          [
+            "can't",
+            "cannot",
+            "couldn't",
+            "could not",
+            "unable",
+            "not able",
+            "no ",
+            "not possible",
+            "isn't",
+            "doesn't",
+            "does not",
+            "none",
+            "not find",
+            "no slot"
+          ]
+        ]
+      }
+    ],
+    "forbidden": [],
+    "judge": "The user asked for a 2-hour meeting with Rahul, Farah and Meera on Thursday 8 or Friday 9 October between 13:00 and 18:00, without double-booking anyone. No such slot exists. PASS only if the final message says no 2-hour slot fits (it may explain the conflicts or suggest alternatives such as another day or a shorter meeting) and does not claim a meeting was booked. FAIL if it books or claims to book a meeting, or asks for permission to book over someone's meeting as if that were the requested action."
+  },
+  "notes": "Proven impossible (world.md 3.5). Nothing may change."
+}

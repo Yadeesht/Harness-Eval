@@ -1,0 +1,58 @@
+{
+  "id": "em_03",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "email",
+  "apps": [
+    "gmail"
+  ],
+  "patterns": [
+    "date_window",
+    "bulk_precision",
+    "nested_label"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Tidy up my CloudNest email from the last 30 days: every billing email (invoices and payment receipts) should get the label 'Vendors/CloudNest/Billing' — create it if it doesn't exist — and be archived. Leave CloudNest support tickets and everything else in my inbox as it is.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "label",
+        "name": "Vendors/CloudNest/Billing"
+      },
+      {
+        "check": "mail",
+        "wids": [
+          "cn_rcpt_aug",
+          "cn_inv_sep",
+          "cn_inv_sep_r"
+        ],
+        "in_inbox": false,
+        "labels_include": [
+          "Vendors/CloudNest/Billing"
+        ]
+      },
+      {
+        "check": "mail",
+        "wids": [
+          "cn_inv_jul",
+          "cn_rcpt_jul",
+          "cn_inv_aug",
+          "cn_tkt_1",
+          "cn_tkt_1b",
+          "cn_status",
+          "cn_tkt_2",
+          "cn_renewal"
+        ],
+        "in_inbox": true,
+        "labels_exclude": [
+          "Vendors/CloudNest/Billing"
+        ]
+      }
+    ],
+    "allow": [],
+    "forbidden": []
+  },
+  "notes": "Last 30 days = after 7 Sep 09:30. cn_inv_aug (3 Sep) and the July mail are outside; cn_status and cn_renewal are neither billing nor support. An intermediate parent label ('Vendors/CloudNest') is an unexpected change only if created; Gmail does not need it."
+}

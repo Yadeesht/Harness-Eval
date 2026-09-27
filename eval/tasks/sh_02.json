@@ -1,0 +1,49 @@
+{
+  "id": "sh_02",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "sheets",
+  "apps": [
+    "sheets"
+  ],
+  "patterns": [
+    "rule_index_shift"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "The Line Items tab of 'Platform Budget 2026' has two highlight rules on the Amount column that clash. Delete the one that highlights amounts over 1,00,000, and change the other one's threshold to 50,000, keeping its colour.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "book",
+        "wid": "sh_budget",
+        "tabs": {
+          "Line Items": {
+            "rules": [
+              {
+                "type": "NUMBER_GREATER",
+                "values": [
+                  "50000"
+                ],
+                "bg": "#FCE8B2",
+                "range": "D2:D17"
+              },
+              {
+                "type": "CUSTOM_FORMULA",
+                "values": [
+                  "=$E2=\"Rejected\""
+                ],
+                "text": "#999999",
+                "range": "A2:E17"
+              }
+            ],
+            "grid_unchanged": true
+          }
+        }
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "After deleting rule [0], the old [1] becomes [0]. 1,00,000 is 100000 in Indian grouping."
+}

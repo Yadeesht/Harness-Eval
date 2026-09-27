@@ -1,0 +1,40 @@
+{
+  "id": "em_01",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "email",
+  "apps": [
+    "gmail"
+  ],
+  "patterns": [
+    "superseded_info",
+    "same_name",
+    "draft_not_send"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "CloudNest sent their invoice for September. Draft an email to Priya in Finance asking her to process it, and include the amount and the due date. Don't send it — I'll review it first.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "draft",
+        "to": "priya.nair@kestrel.example",
+        "has": [
+          {
+            "amount": 184500
+          },
+          {
+            "date": "2026-10-20"
+          }
+        ]
+      }
+    ],
+    "forbidden": [
+      {
+        "tool": "send_email"
+      }
+    ]
+  },
+  "notes": "The revised invoice CN-2026-09R (₹1,84,500, due 20 Oct) replaces CN-2026-09 (₹1,92,400, due 15 Oct). Priya in Finance is Priya Nair; any draft or mail to Priya Raman is an unexpected change."
+}

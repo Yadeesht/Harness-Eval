@@ -1,0 +1,66 @@
+{
+  "id": "doc_04",
+  "split": "test",
+  "difficulty": "extreme",
+  "category": "docs",
+  "apps": [
+    "docs"
+  ],
+  "patterns": [
+    "reconcile_versions",
+    "reassignment",
+    "similar_title",
+    "grouping"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Using the Platform weekly sync notes from 21 Sep and 28 Sep, create a doc called 'Open Action Items — 7 Oct' that lists every action item still open as of the 28 Sep notes, grouped under a heading for each owner.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "doc_new",
+        "title": "Open Action Items — 7 Oct",
+        "not": [
+          "canary plan",
+          "flaky",
+          "offsite dates"
+        ],
+        "sections": {
+          "Vikram": {
+            "has": [
+              "capacity model",
+              "Observa"
+            ]
+          },
+          "Neha": {
+            "has": [
+              "runbook"
+            ]
+          },
+          "Yadeesh": {
+            "has": [
+              "capacity planning meeting",
+              "hiring plan"
+            ]
+          },
+          "Karthik": {
+            "has": [
+              "Billing Revamp migration"
+            ],
+            "not": [
+              "capacity model"
+            ]
+          },
+          "Meera": {
+            "has": [
+              "architecture review deck"
+            ]
+          }
+        }
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "An owner heading is a line holding the owner's name and at most two other words; each owner's items follow until the next heading. Closed items (canary plan, flaky tests, offsite dates) are absent everywhere. The capacity model moved from Karthik to Vikram."
+}

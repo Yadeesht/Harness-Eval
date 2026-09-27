@@ -1,0 +1,45 @@
+{
+  "id": "x_06",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "cross_app",
+  "apps": [
+    "gmail",
+    "docs"
+  ],
+  "patterns": [
+    "numbered_points",
+    "similar_title",
+    "count_confirmation"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Farah sent feedback on the Service Mesh PRD by email. Add each of her numbered points as a separate comment on the 'Service Mesh PRD' doc, then email Farah to confirm how many comments you added.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "comments_new",
+        "wid": "doc_prd",
+        "count": 4,
+        "each": [
+          "rollback",
+          "mTLS",
+          "cost estimate",
+          "SLO dashboard"
+        ]
+      },
+      {
+        "check": "sent",
+        "to": "farah.khan@kestrel.example",
+        "has": [
+          {
+            "number": 4
+          }
+        ]
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "fk_prd_v0 (two older points about v0) and the 'Service Mesh PRD v0 (archived)' doc are distractors; any comment there is an unexpected change. read_email flattens the numbered list onto one line."
+}

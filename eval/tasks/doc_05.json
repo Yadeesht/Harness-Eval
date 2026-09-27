@@ -1,0 +1,20 @@
+{
+  "id": "doc_05",
+  "split": "dev",
+  "difficulty": "medium",
+  "category": "docs",
+  "apps": ["docs"],
+  "patterns": ["index_formatting", "create_header", "export"],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "In the 'Hiring Plan H2' doc, add the header 'DRAFT — not for distribution', make the 'Open Roles' heading bold, and export the doc as a PDF named 'Hiring Plan H2 — v2'.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {"check": "doc", "wid": "doc_hiring_h2", "text_unchanged": true, "header": "DRAFT — not for distribution", "bold_lines": ["Open Roles"]},
+      {"check": "file_new", "name": "Hiring Plan H2 — v2", "ext": [".pdf"], "mime": "application/pdf"}
+    ],
+    "forbidden": []
+  },
+  "notes": "Formatting outside the heading line must be unchanged (bold_lines compares every other character's style with the seed). Hiring Plan H1 must be unchanged (diff)."
+}

@@ -1,0 +1,110 @@
+{
+  "id": "doc_03",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "docs",
+  "apps": [
+    "docs"
+  ],
+  "patterns": [
+    "flattened_table",
+    "similar_title",
+    "sort",
+    "table_insert",
+    "footer"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Create a new doc called 'Postmortem Action Items — Payments API' with a table (columns Owner, Action, Due) listing every action item from the Payments API outage postmortem, sorted by due date with the earliest first. Add the footer 'Confidential — internal only'.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "doc_new",
+        "title": "Postmortem Action Items — Payments API",
+        "footer": "Confidential — internal only",
+        "table": [
+          [
+            "Owner",
+            "Action",
+            "Due"
+          ],
+          [
+            [
+              "Rohan Kapoor",
+              "Rohan"
+            ],
+            {
+              "has": "staging credentials"
+            },
+            {
+              "date": "2026-10-09"
+            }
+          ],
+          [
+            [
+              "Neha Gupta",
+              "Neha"
+            ],
+            {
+              "has": "queue depth"
+            },
+            {
+              "date": "2026-10-14"
+            }
+          ],
+          [
+            [
+              "Arjun Mehta",
+              "Arjun"
+            ],
+            {
+              "has": "runbook"
+            },
+            {
+              "date": "2026-10-16"
+            }
+          ],
+          [
+            [
+              "Karthik Subramanian",
+              "Karthik"
+            ],
+            {
+              "has": "retry budget"
+            },
+            {
+              "date": "2026-10-23"
+            }
+          ],
+          [
+            [
+              "Meera Pillai",
+              "Meera"
+            ],
+            {
+              "has": "failover path"
+            },
+            {
+              "date": "2026-10-28"
+            }
+          ],
+          [
+            [
+              "Rohan Kapoor",
+              "Rohan"
+            ],
+            {
+              "has": "service-account permissions"
+            },
+            {
+              "date": "2026-10-30"
+            }
+          ]
+        ]
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "get_doc_content shows the source table as one line per cell (4 per row). The Search API postmortem and the template are distractors. Only the first table of the new doc is graded; the Tag column is not requested."
+}

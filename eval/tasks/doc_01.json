@@ -1,0 +1,65 @@
+{
+  "id": "doc_01",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "docs",
+  "apps": [
+    "gmail",
+    "docs"
+  ],
+  "patterns": [
+    "targeted_replace",
+    "similar_title"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Farah emailed that the Service Mesh Migration launch date has changed. Update the launch date everywhere it appears in the 'Q4 Planning — Platform' doc, without changing any other project's dates.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "doc",
+        "wid": "doc_q4plan",
+        "lines": [
+          "Q4 Planning — Platform",
+          "Owner: Yadeesh T · Last updated: 30 Sep 2026",
+          "Projects",
+          {
+            "has": [
+              "Service Mesh Migration — owner: Meera Pillai — launch:",
+              {
+                "date": "2026-12-11"
+              },
+              "status: on track"
+            ],
+            "not": [
+              "30 Nov"
+            ]
+          },
+          "Billing Revamp — owner: Karthik Subramanian — launch: 30 Nov 2026 — status: at risk",
+          "Observability v2 — owner: Neha Gupta — launch: 15 Dec 2026 — status: on track",
+          "Flaky Test Cleanup — owner: Arjun Mehta — launch: 23 Oct 2026 — status: on track",
+          "Key dates",
+          "16 Nov 2026 — Service Mesh Migration canary",
+          {
+            "has": [
+              "Service Mesh Migration launch",
+              {
+                "date": "2026-12-11"
+              }
+            ],
+            "not": [
+              "30 Nov"
+            ]
+          },
+          "30 Nov 2026 — Billing Revamp launch",
+          "15 Dec 2026 — Observability v2 launch",
+          "Risks",
+          "The CloudNest dependency may delay the mesh rollout."
+        ]
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "A blanket replace of '30 Nov 2026' also changes Billing Revamp. 'Q4 Planning — Data Team' must be unchanged (diff)."
+}

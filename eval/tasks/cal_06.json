@@ -1,0 +1,46 @@
+{
+  "id": "cal_06",
+  "split": "test",
+  "difficulty": "extreme",
+  "category": "calendar",
+  "apps": [
+    "calendar"
+  ],
+  "patterns": [
+    "organizer_filter",
+    "rsvp_counting",
+    "description_append",
+    "boundary"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Look at the meetings with guests that I organise next week. If fewer than half of the guests (not counting me) have accepted, add the line 'Low RSVP — please confirm' at the end of the description, keeping what's already there. If none of the guests have accepted, cancel the meeting instead. Only 'accepted' counts as accepted.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "event",
+        "wid": "hiring_debrief",
+        "description_prefix": "Debrief for the Senior SRE loop. Scorecards are in the Hiring Pipeline sheet.",
+        "description_suffix": "Low RSVP — please confirm",
+        "only_fields": [
+          "description"
+        ]
+      },
+      {
+        "check": "event",
+        "wid": "roadmap_preread",
+        "description_suffix": "Low RSVP — please confirm",
+        "only_fields": [
+          "description"
+        ]
+      },
+      {
+        "check": "event_deleted",
+        "wid": "budget_checkin"
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "Accepted guests: Hiring debrief 1/4, Q4 roadmap pre-read 1/5, Budget check-in 0/1 (delete), Welcome Ananya 1/2 = exactly half (unchanged), CloudNest vendor sync 2/2, the 1:1s and the Brightline sync 1/1. Events organised by others are unchanged (diff)."
+}

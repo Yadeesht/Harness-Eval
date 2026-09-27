@@ -1,0 +1,190 @@
+{
+  "id": "sh_04",
+  "split": "test",
+  "difficulty": "medium",
+  "category": "sheets",
+  "apps": [
+    "sheets"
+  ],
+  "patterns": [
+    "multi_tab_create",
+    "aggregation"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Create a spreadsheet called 'Category Spend Q3' with one tab per category in the Line Items of 'Platform Budget 2026', each listing that category's line items (Vendor, Month and Amount, all statuses), plus a 'Totals' tab with each category's total.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "book",
+        "title": "Category Spend Q3",
+        "allow_empty_tabs": true,
+        "tabs": {
+          "Infra": {
+            "header": [
+              "Vendor",
+              "Month",
+              "Amount"
+            ],
+            "header_optional": true,
+            "rows_unordered": [
+              [
+                "CloudNest",
+                "Jul",
+                {
+                  "amount": 168000
+                }
+              ],
+              [
+                "CloudNest",
+                "Aug",
+                {
+                  "amount": 170000
+                }
+              ],
+              [
+                "CloudNest",
+                "Sep",
+                {
+                  "amount": 184500
+                }
+              ]
+            ]
+          },
+          "Observability": {
+            "header": [
+              "Vendor",
+              "Month",
+              "Amount"
+            ],
+            "header_optional": true,
+            "rows_unordered": [
+              [
+                "Observa",
+                "Jul",
+                {
+                  "amount": 52000
+                }
+              ],
+              [
+                "Observa",
+                "Aug",
+                {
+                  "amount": 52000
+                }
+              ],
+              [
+                "Observa",
+                "Sep",
+                {
+                  "amount": 58750
+                }
+              ],
+              [
+                "Observa",
+                "Sep",
+                {
+                  "amount": 9800
+                }
+              ]
+            ]
+          },
+          "Tooling": {
+            "header": [
+              "Vendor",
+              "Month",
+              "Amount"
+            ],
+            "header_optional": true,
+            "rows_unordered": [
+              [
+                "Figma",
+                "Jul",
+                {
+                  "amount": 18500
+                }
+              ],
+              [
+                "GitHub",
+                "Jul",
+                {
+                  "amount": 42000
+                }
+              ],
+              [
+                "Figma",
+                "Aug",
+                {
+                  "amount": 18500
+                }
+              ],
+              [
+                "GitHub",
+                "Aug",
+                {
+                  "amount": 42000
+                }
+              ],
+              [
+                "Figma",
+                "Sep",
+                {
+                  "amount": 18500
+                }
+              ],
+              [
+                "GitHub",
+                "Sep",
+                {
+                  "amount": 42000
+                }
+              ]
+            ]
+          },
+          "Travel": {
+            "header": [
+              "Vendor",
+              "Month",
+              "Amount"
+            ],
+            "header_optional": true,
+            "rows_unordered": [
+              [
+                "TravelDesk",
+                "Jul",
+                {
+                  "amount": 23400
+                }
+              ],
+              [
+                "TravelDesk",
+                "Aug",
+                {
+                  "amount": 61250
+                }
+              ],
+              [
+                "TravelDesk",
+                "Sep",
+                {
+                  "amount": 12800
+                }
+              ]
+            ]
+          },
+          "Totals": {
+            "pairs": {
+              "Infra": 522500,
+              "Observability": 172550,
+              "Tooling": 181500,
+              "Travel": 97450
+            }
+          }
+        }
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "All statuses count, including the rejected second Observa September row. A leftover empty default tab is allowed. Platform Budget 2026 must be unchanged (diff)."
+}

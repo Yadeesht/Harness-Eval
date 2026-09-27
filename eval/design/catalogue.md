@@ -601,7 +601,27 @@ Every task runs single-turn against the world in `world.md`. Item ids (`cn_inv_s
 | Precision and rules | bulk_precision (em_03), boundary (em_05, cal_06), conditional_branch (x_01, x_04) |
 | Behavior | clarify (amb_*), missing_capability (imp_01), no_feasible_slot (imp_02) |
 
-## Open points for Phase 2
-- **Golden-call counts:** record the real numbers and re-check each difficulty label against the rubric.
-- **Seed check:** on the generated seed, re-prove the slot claims (cal_02, cal_03, cal_05, imp_02, x_07) and the "nothing unread 5–7 Oct besides the listed mail" claim (em_06).
-- **Judge rubrics:** write them for amb_* and imp_*, then calibrate on ~20 hand labels.
+## Phase 2 results (2026-09-28)
+
+All 40 tasks validate: golden PASS, do-nothing FAIL, negative FAIL (`eval/validate.py`, 120/120). The task files in `eval/tasks/` are now the source of truth; where they differ from this catalogue, the task file wins. Changes made while validating:
+
+- **amb_02:** Samantha also organises the Fri 9 Oct "Hiring sync". It is already on Friday, so it isn't a real option; the judge rubric accepts a message that mentions it.
+- **x_01:** `send_email` takes a single address, so each person gets their own confirmation.
+- **x_03:** the golden path looks up addresses in the Team Directory, so `apps` includes sheets.
+- **amb_03:** the golden path asks before reading the RSVPs, so `apps` is gmail only.
+- **seed_additions:** task files list the items they add (`{"emails": ["pn_dinner"]}`); their text lives in `world_data.SEED_ADDITIONS`.
+
+**Real golden-call counts** (`eval/task_report.py`), against the rubric: medium 4–8 calls; hard 8–15 calls or 3 hops; extreme 15+ calls or 4+ hops.
+
+| Calls | Tasks |
+|---|---|
+| inside the call band | doc_02, doc_05, em_02, em_03, em_04, em_06, sh_01, sh_04, sh_05, tsk_01, tsk_02, x_01, x_02, x_03, x_05, x_06, x_10 |
+| hard, under 8 calls, so resting on 3 hops | cal_01 (4), cal_02 (6), cal_03 (7), cal_04 (5), cal_05 (4), doc_01 (6), doc_03 (5), em_01 (4), imp_01 (2), imp_02 (5), sh_02 (5), x_08 (4) |
+| extreme, under 15 calls, so resting on 4+ hops | amb_03 (3), cal_06 (4), doc_04 (4), em_05 (6), imp_03 (4), sh_03 (6), x_04 (8), x_07 (12), x_09 (7) |
+| medium, under 4 calls | amb_01 (3), amb_02 (1) |
+
+The labels are unchanged. The short golden paths for amb/imp tasks are expected, because their difficulty is in the behaviour (ask, or report), not in the tool work.
+
+**Still open:**
+- **LLM judge:** rubrics are written (`expect.judge` in amb_01–03 and imp_01–03). The judge call itself and its calibration on ~20 hand labels come with the first real runs.
+- **Grading limits:** a few trap outcomes code can't grade are listed in each task's `notes`. For example, em_05 can't check which of Meera's two items was approved.

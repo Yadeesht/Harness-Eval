@@ -1,0 +1,44 @@
+{
+  "id": "x_10",
+  "split": "test",
+  "difficulty": "medium",
+  "category": "cross_app",
+  "apps": [
+    "gmail",
+    "calendar",
+    "docs"
+  ],
+  "patterns": [
+    "description_append",
+    "similar_title"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Tomorrow's 'PRD Review' needs an agenda: add the agenda points from Farah's email about it, plus a link to the 'Service Mesh PRD' doc, to the meeting's description — keep what's already in the description.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "event",
+        "wid": "prd_review",
+        "description_has": [
+          "Review of the Service Mesh PRD before sign-off.",
+          "canary rollout",
+          "cost model",
+          "sign-off owners"
+        ],
+        "description_has_doc": [
+          "doc_prd"
+        ],
+        "description_lacks_doc": [
+          "doc_prd_v0"
+        ],
+        "only_fields": [
+          "description"
+        ]
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "The original sentence must stay; time and guests must not change. The link must be the Service Mesh PRD, not 'Service Mesh PRD v0 (archived)'."
+}

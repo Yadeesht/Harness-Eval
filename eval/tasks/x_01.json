@@ -1,0 +1,44 @@
+{
+  "id": "x_01",
+  "split": "dev",
+  "difficulty": "hard",
+  "category": "cross_app",
+  "apps": ["gmail", "calendar", "sheets"],
+  "patterns": ["conditional_branch", "multi_calendar", "same_name"],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Neha emailed asking to swap on-call weeks with Arjun. If neither of them has leave booked during either of those two weeks, make the swap in the 'On-call Rotation Q4' sheet and email them both to confirm it. If either of them is on leave, don't change anything — just tell me why.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "book",
+        "wid": "sh_oncall",
+        "tabs": {
+          "Rotation": {
+            "grid": [
+              ["Week starting", "Primary", "Secondary"],
+              ["05/10/2026", "Karthik Subramanian", "Vikram Rao"],
+              ["12/10/2026", "Meera Pillai", "Neha Gupta"],
+              ["19/10/2026", "Arjun Mehta", "Karthik Subramanian"],
+              ["26/10/2026", "Neha Gupta", "Meera Pillai"],
+              ["02/11/2026", "Vikram Rao", "Arjun Mehta"],
+              ["09/11/2026", "Karthik Subramanian", "Neha Gupta"],
+              ["16/11/2026", "Meera Pillai", "Vikram Rao"],
+              ["23/11/2026", "Neha Gupta", "Arjun Mehta"],
+              ["30/11/2026", "Arjun Mehta", "Karthik Subramanian"],
+              ["07/12/2026", "Vikram Rao", "Meera Pillai"],
+              ["14/12/2026", "Karthik Subramanian", "Neha Gupta"],
+              ["21/12/2026", "Meera Pillai", "Arjun Mehta"],
+              ["28/12/2026", "Neha Gupta", "Vikram Rao"]
+            ]
+          }
+        }
+      },
+      {"check": "sent", "to": "neha.gupta@kestrel.example", "has": [{"date": "2026-10-19"}, {"date": "2026-10-26"}]},
+      {"check": "sent", "to": "arjun.mehta@kestrel.example", "has": [{"date": "2026-10-19"}, {"date": "2026-10-26"}]}
+    ],
+    "forbidden": []
+  },
+  "notes": "send_email takes one address, so each gets their own mail. Arjun's dentist visit (27 Oct) and his 9-13 Nov leave are not leave in the swap weeks; 19-20 Oct are company holidays, not personal leave. Nothing to arjun.iyer@ (diff)."
+}

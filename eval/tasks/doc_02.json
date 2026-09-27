@@ -1,0 +1,73 @@
+{
+  "id": "doc_02",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "docs",
+  "apps": [
+    "docs"
+  ],
+  "patterns": [
+    "comment_workflow",
+    "per_author_branch",
+    "resolved_distractor"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Work through the open comments on the 'Platform Offsite Agenda — Draft' doc. Make the edits Rahul asked for, then reply 'Done' to each of his comments and resolve them. For comments from anyone else, reply 'I'll review this on Friday' and leave them open.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "doc",
+        "wid": "doc_agenda",
+        "lines": [
+          "Platform Offsite — 15–16 Oct 2026 — Le Pondy, Puducherry",
+          "Draft v2 · owner: Isha Bhatt",
+          "Day 1 — Thu 15 Oct",
+          "09:30 Arrive and coffee",
+          "10:00 Roadmap & OKRs",
+          "13:00 Lunch",
+          "14:00 Team working sessions",
+          "17:30 Wrap-up",
+          "19:30 Team dinner",
+          "Day 2 — Fri 16 Oct",
+          "09:30 Incident retro",
+          "11:00 Team building",
+          "13:00 Lunch",
+          "15:00 Travel back"
+        ]
+      },
+      {
+        "check": "comment",
+        "wid": "doc_agenda:c1",
+        "resolved": true,
+        "reply_has": "done"
+      },
+      {
+        "check": "comment",
+        "wid": "doc_agenda:c2",
+        "resolved": true,
+        "reply_has": "done"
+      },
+      {
+        "check": "comment",
+        "wid": "doc_agenda:c3",
+        "resolved": false,
+        "reply_has": "review this on Friday"
+      },
+      {
+        "check": "comment",
+        "wid": "doc_agenda:c5",
+        "resolved": false,
+        "reply_has": "review this on Friday"
+      },
+      {
+        "check": "comment",
+        "wid": "doc_agenda:c4",
+        "untouched": true
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "c4 is already resolved (not open). 'Lunch' appears on both days; only Day 1 moves."
+}

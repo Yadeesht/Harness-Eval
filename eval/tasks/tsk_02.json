@@ -1,0 +1,51 @@
+{
+  "id": "tsk_02",
+  "split": "test",
+  "difficulty": "medium",
+  "category": "tasks",
+  "apps": [
+    "tasks"
+  ],
+  "patterns": [
+    "attribute_filter"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "In my 'Work' task list, create a task called 'Q4 Planning' due on 30 October, and move every open task with 'Q4' in its title that has no due date under it as a subtask.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "tasks_new",
+        "list": "tl_work",
+        "tasks": [
+          {
+            "title": "Q4 Planning",
+            "due": "2026-10-30",
+            "parent": null
+          }
+        ]
+      },
+      {
+        "check": "task",
+        "wid": "q1",
+        "status": "needsAction",
+        "parent_title": "Q4 Planning"
+      },
+      {
+        "check": "task",
+        "wid": "q3",
+        "status": "needsAction",
+        "parent_title": "Q4 Planning"
+      },
+      {
+        "check": "task",
+        "wid": "q5",
+        "status": "needsAction",
+        "parent_title": "Q4 Planning"
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "q2 (dated), q4 (completed), w1 (dated) and Personal's 'Q4 tax planning' stay unchanged (diff)."
+}

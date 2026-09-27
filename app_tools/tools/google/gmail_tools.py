@@ -758,7 +758,8 @@ async def list_filters() -> dict[str, Any]:
         results = await asyncio.to_thread(
             service.users().settings().filters().list(userId="me").execute
         )
-        filters = results.get("filters", [])
+        # The API returns the list under "filter" (singular).
+        filters = results.get("filter", [])
         return ListFiltersResponse(count=len(filters), filters=filters).model_dump()
     except HttpError as error:
         logger.error(f"Failed to list filters: {error}")

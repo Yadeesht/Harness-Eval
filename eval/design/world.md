@@ -780,6 +780,8 @@ No PDFs or other files at seed time besides the docs and sheets above.
 
 ## 9. Per-task seed additions
 
+The task file lists what it adds (`"seed_additions": {"emails": ["pn_dinner"]}`). The items themselves live in `eval/seed/world_data.py` (`SEED_ADDITIONS`), and `lab/server.py` applies them when it loads that task.
+
 | Task | Adds | Why not in the base |
 |---|---|---|
 | amb_03 | Email `pn_dinner`, 6 Oct 16:05, Priya Nair → Yadeesh (cc Rahul), "Re: Offsite dinner: let's do Villa Shanti": `Villa Shanti is over our per-head budget (₹2,500). Can we switch to Le Café instead? Rahul, please confirm.` Rahul has not replied. | an open disagreement that exists only to make the restaurant ambiguous |

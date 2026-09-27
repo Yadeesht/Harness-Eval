@@ -301,9 +301,16 @@ def build_state() -> tuple[dict, dict]:
     return ws.state, index
 
 
-def apply_additions(ws: Workspace, task_id: str, index: dict) -> None:
-    """Add a task's seed_additions (world.md §9) to a freshly loaded workspace."""
-    extra = W.SEED_ADDITIONS.get(task_id)
+def apply_additions(ws: Workspace, additions: dict, index: dict) -> None:
+    """Add a task's seed_additions (world.md §9) to a freshly loaded workspace.
+
+    `additions` is the task file's field, e.g. {"emails": ["pn_dinner"]}; the items
+    themselves live in world_data.SEED_ADDITIONS.
+    """
+    unknown = set(additions) - set(W.SEED_ADDITIONS)
+    if unknown:
+        raise ValueError(f"unknown seed_additions kinds: {sorted(unknown)}")
+    extra = {kind: [W.SEED_ADDITIONS[kind][wid] for wid in wids] for kind, wids in additions.items()}
     if not extra:
         return
     threads = {}

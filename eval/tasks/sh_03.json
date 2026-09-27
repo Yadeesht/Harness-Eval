@@ -1,0 +1,43 @@
+{
+  "id": "sh_03",
+  "split": "dev",
+  "difficulty": "extreme",
+  "category": "sheets",
+  "apps": ["sheets"],
+  "patterns": ["normalize_values", "dedupe_case", "rewrite_range", "aggregation", "blank_handling"],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Clean up the 'Offsite RSVPs' sheet: make every Attending value either Yes or No, remove duplicate responses (same email, ignoring case — keep the most recent one by timestamp), and add a tab called 'Summary' with the number of attending guests for each dietary preference, counting a blank preference as 'None'.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "book",
+        "wid": "sh_rsvp",
+        "tabs": {
+          "Responses": {
+            "header": ["Timestamp", "Name", "Email", "Attending", "Dietary", "Travelling from"],
+            "rows_unordered": [
+              [{"prefix": "29/09/2026 13:10"}, "Meera Pillai", "meera.pillai@kestrel.example", {"exact": "Yes"}, "Vegan", "Bengaluru"],
+              [{"prefix": "02/10/2026 11:00"}, "Karthik Subramanian", "karthik.s@kestrel.example", {"exact": "No"}, "Non-vegetarian", "Chennai"],
+              [{"prefix": "25/09/2026 11:05"}, "Neha Gupta", "neha.gupta@kestrel.example", {"exact": "Yes"}, "Vegetarian", "Pune"],
+              [{"prefix": "25/09/2026 12:30"}, "Arjun Mehta", "arjun.mehta@kestrel.example", {"exact": "Yes"}, "Non-vegetarian", "Bengaluru"],
+              [{"prefix": "29/09/2026 10:20"}, "Vikram Rao", "vikram.rao@kestrel.example", {"exact": "Yes"}, "Non-vegetarian", "Bengaluru"],
+              [{"prefix": "25/09/2026 15:20"}, "Priya Raman", "priya.raman@kestrel.example", {"exact": "Yes"}, "Vegan", "Bengaluru"],
+              [{"prefix": "26/09/2026 09:15"}, "Farah Khan", "farah.khan@kestrel.example", {"exact": "Yes"}, "Jain", "Mumbai"],
+              [{"prefix": "26/09/2026 10:00"}, "Rahul Verma", "rahul.verma@kestrel.example", {"exact": "Yes"}, "Non-vegetarian", "Bengaluru"],
+              [{"prefix": "30/09/2026 18:45"}, "Rohan Kapoor", "rohan.kapoor@kestrel.example", {"exact": "Yes"}, "Non-vegetarian", "Delhi"],
+              [{"prefix": "26/09/2026 16:30"}, "Deepak Joshi", "deepak.joshi@kestrel.example", {"exact": "No"}, ["", "None"], "Bengaluru"],
+              [{"prefix": "27/09/2026 08:50"}, "Isha Bhatt", "isha.bhatt@kestrel.example", {"exact": "Yes"}, "Vegetarian", "Bengaluru"],
+              [{"prefix": "28/09/2026 09:05"}, "Samantha Lee", "samantha.lee@kestrel.example", {"exact": "Yes"}, ["", "None"], "Bengaluru"],
+              [{"prefix": "01/10/2026 09:30"}, "Priya Nair", "priya.nair@kestrel.example", {"exact": "No"}, ["", "None"], "Bengaluru"]
+            ]
+          },
+          "Summary": {"pairs": {"Non-vegetarian": 4, "Vegetarian": 2, "Vegan": 2, "Jain": 1, "None": 1}}
+        }
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "Rows may be in any order; emails compare case-insensitively; a blank dietary cell may be left blank or written as None. Attending must be exactly Yes or No. Nothing may remain below the 13 rows. The Summary layout is free (label next to count); a Total row is allowed."
+}

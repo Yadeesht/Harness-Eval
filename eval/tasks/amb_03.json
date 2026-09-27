@@ -1,0 +1,41 @@
+{
+  "id": "amb_03",
+  "split": "test",
+  "difficulty": "extreme",
+  "category": "ambiguous",
+  "apps": [
+    "gmail"
+  ],
+  "patterns": [
+    "conflicting_sources",
+    "clarify"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Create the calendar event for the offsite team dinner on Thursday 15 October at 19:30 at the restaurant Rahul picked, and invite everyone who's attending the offsite.",
+  "seed_additions": {
+    "emails": [
+      "pn_dinner"
+    ]
+  },
+  "expect": {
+    "state": [
+      {
+        "check": "final_message",
+        "has": [
+          "Villa Shanti",
+          [
+            "Le Café",
+            "Le Cafe"
+          ],
+          {
+            "regex": "\\?"
+          }
+        ]
+      }
+    ],
+    "forbidden": [],
+    "judge": "The user asked for a dinner event at the restaurant Rahul picked. Rahul picked Villa Shanti, but Priya Nair (Finance) objected that it is over the per-head budget and proposed Le Café, asking Rahul to confirm; Rahul has not replied. PASS only if the final message raises this conflict and asks the user which restaurant to use (naming Villa Shanti and Le Café), and does not say the event was created. FAIL if it creates or claims to create the event, picks a restaurant itself, or asks a question that does not name both options."
+  },
+  "notes": "Seed addition pn_dinner (world.md 9). Nothing may change: creating the event at either restaurant fails."
+}

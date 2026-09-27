@@ -1,0 +1,64 @@
+{
+  "id": "x_04",
+  "split": "test",
+  "difficulty": "extreme",
+  "category": "cross_app",
+  "apps": [
+    "gmail",
+    "sheets",
+    "docs"
+  ],
+  "patterns": [
+    "superseded_info",
+    "percentage",
+    "conditional_branch",
+    "same_name",
+    "link_handoff"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Compare CloudNest's September invoice with CloudNest's monthly budget in the 'Platform Budget 2026' spreadsheet. If the invoice is more than 10% over budget: add a comment on the spreadsheet flagging it with both numbers, create a doc called 'CloudNest September Variance' with the invoice amount, the budget, the difference and the percentage, and email Priya in Finance the doc's link. If it's within 10%, just tell me the difference.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "comments_new",
+        "wid": "sh_budget",
+        "count": 1,
+        "has": [
+          {
+            "amount": 184500
+          },
+          {
+            "amount": 160000
+          }
+        ]
+      },
+      {
+        "check": "doc_new",
+        "title": "CloudNest September Variance",
+        "has": [
+          {
+            "amount": 184500
+          },
+          {
+            "amount": 160000
+          },
+          {
+            "amount": 24500
+          },
+          {
+            "regex": "15\\.3(?:[01]\\d*)?\\s*%"
+          }
+        ]
+      },
+      {
+        "check": "sent",
+        "to": "priya.nair@kestrel.example",
+        "new_doc_link": "CloudNest September Variance"
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "The revised invoice CN-2026-09R (₹1,84,500) replaces CN-2026-09 (₹1,92,400, which would give 20.25%). 184500 - 160000 = 24500 = 15.31% over the Monthly Budget tab's 160000. The mail must contain the new doc's ID (its link). Nothing to Priya Raman (diff)."
+}

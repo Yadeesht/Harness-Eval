@@ -1,0 +1,66 @@
+{
+  "id": "x_07",
+  "split": "test",
+  "difficulty": "extreme",
+  "category": "cross_app",
+  "apps": [
+    "docs",
+    "calendar",
+    "gmail"
+  ],
+  "patterns": [
+    "flattened_table",
+    "next_working_day",
+    "multi_calendar",
+    "tag_filter"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Set up a 30-minute 'Payments postmortem follow-up' with every owner of an action item in the Payments API outage postmortem, on the first working day after the latest action-item due date, at a time when all of them and I are free. Then email Rohan the list of action items tagged [SEC].",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "event",
+        "change": "new",
+        "summary_has": "postmortem",
+        "attendees_include": [
+          "neha.gupta@kestrel.example",
+          "karthik.s@kestrel.example",
+          "rohan.kapoor@kestrel.example",
+          "meera.pillai@kestrel.example",
+          "arjun.mehta@kestrel.example"
+        ],
+        "minutes": 30,
+        "start_in": [
+          "2026-11-02T17:00:00+05:30",
+          "2026-11-02T17:15:00+05:30",
+          "2026-11-02T17:30:00+05:30"
+        ],
+        "free": [
+          "neha.gupta@kestrel.example",
+          "karthik.s@kestrel.example",
+          "rohan.kapoor@kestrel.example",
+          "meera.pillai@kestrel.example",
+          "arjun.mehta@kestrel.example",
+          "yadeesh@kestrel.example"
+        ]
+      },
+      {
+        "check": "sent",
+        "to": "rohan.kapoor@kestrel.example",
+        "has": [
+          "staging credentials",
+          "service-account permissions"
+        ],
+        "not": [
+          "retry budget",
+          "queue depth",
+          "failover"
+        ]
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "The latest due date is Fri 30 Oct, so the next working day is Mon 2 Nov; only 17:00, 17:15 and 17:30 fit everyone (world.md 3.5). The action-item table reads as one cell per line."
+}

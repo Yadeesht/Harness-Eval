@@ -1,0 +1,64 @@
+{
+  "id": "em_04",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "email",
+  "apps": [
+    "gmail"
+  ],
+  "patterns": [
+    "filter_choice",
+    "date_window",
+    "deadline_judgement",
+    "archived_mail"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "I created a Gmail filter by mistake that sends Rohan's emails straight past my inbox, so I've been missing security mail. Delete that filter, move his emails from the last 30 days back into my inbox, and add the 'Action Required' label to the ones that give me a deadline.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "filter_deleted",
+        "wid": "f_rohan"
+      },
+      {
+        "check": "mail",
+        "wids": [
+          "rk_access",
+          "rk_keys"
+        ],
+        "in_inbox": true,
+        "labels_include": [
+          "Action Required",
+          "Security"
+        ]
+      },
+      {
+        "check": "mail",
+        "wids": [
+          "rk_phish",
+          "rk_hours",
+          "rk_pentest"
+        ],
+        "in_inbox": true,
+        "labels_include": [
+          "Security"
+        ],
+        "labels_exclude": [
+          "Action Required"
+        ]
+      },
+      {
+        "check": "mail",
+        "wid": "rk_laptop",
+        "in_inbox": false,
+        "labels_exclude": [
+          "Action Required"
+        ]
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "f_newstack and f_medium stay (diff). rk_laptop (20 Aug) is outside the window. Restored mail keeps its Security label."
+}

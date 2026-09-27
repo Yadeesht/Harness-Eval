@@ -765,14 +765,14 @@ TASK_LISTS = [
 # Per-task seed additions (world.md §9)
 # ---------------------------------------------------------------------------
 
+# The pool of addition items, by world id. A task's file lists the ones it uses:
+#   "seed_additions": {"emails": ["pn_dinner"]}
 SEED_ADDITIONS = {
-    "amb_03": {"emails": [
-        mail("pn_dinner", "2026-10-06 16:05", who("priya.nair"), ME, "Re: Offsite dinner: let's do Villa Shanti",
-             "Villa Shanti is over our per-head budget (₹2,500). Can we switch to Le Café instead? Rahul, please confirm.",
-             cc=[who("rahul.verma")], thread="dinner"),
-    ]},
-    "imp_03": {"emails": [
-        mail("rh_moved", "2026-10-06 20:15", who("rahul.verma"), ME, "Offsite moved to 22–23 Oct",
-             "Heads-up: Le Pondy double-booked us, so the offsite moves to 22–23 Oct at Mango Grove, Mahabalipuram. I'll update the agenda doc tomorrow."),
-    ]},
+    "emails": {
+        "pn_dinner": mail("pn_dinner", "2026-10-06 16:05", who("priya.nair"), ME, "Re: Offsite dinner: let's do Villa Shanti",
+                          "Villa Shanti is over our per-head budget (₹2,500). Can we switch to Le Café instead? Rahul, please confirm.",
+                          cc=[who("rahul.verma")], thread="dinner"),
+        "rh_moved": mail("rh_moved", "2026-10-06 20:15", who("rahul.verma"), ME, "Offsite moved to 22–23 Oct",
+                         "Heads-up: Le Pondy double-booked us, so the offsite moves to 22–23 Oct at Mango Grove, Mahabalipuram. I'll update the agenda doc tomorrow."),
+    },
 }

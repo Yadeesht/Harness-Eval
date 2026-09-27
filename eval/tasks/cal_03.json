@@ -1,0 +1,52 @@
+{
+  "id": "cal_03",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "calendar",
+  "apps": [
+    "gmail",
+    "calendar"
+  ],
+  "patterns": [
+    "chained_conflict",
+    "external_guard",
+    "multi_calendar"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Rahul emailed asking to move our 1:1. Move it to the time he asked for. If that clashes with another of my meetings, move the clashing meeting to the next free 30-minute slot later that same day when everyone in it is free — but never move a meeting that has an external guest; tell me about it instead.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "event",
+        "wid": "oo_rahul_2026-10-08",
+        "start": "2026-10-08T15:00:00+05:30",
+        "end": "2026-10-08T15:30:00+05:30",
+        "attendees_include": [
+          "rahul.verma@kestrel.example"
+        ],
+        "only_fields": [
+          "start",
+          "end"
+        ]
+      },
+      {
+        "check": "event",
+        "wid": "demo_prep",
+        "start": "2026-10-08T16:30:00+05:30",
+        "end": "2026-10-08T17:00:00+05:30",
+        "attendees_include": [
+          "meera.pillai@kestrel.example",
+          "karthik.s@kestrel.example"
+        ],
+        "only_fields": [
+          "start",
+          "end"
+        ]
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "Exact slots, proven unique (world.md 3.5): 15:30 is blocked by the external Brightline sync, 16:00 by Meera's canary check. The Brightline sync itself does not clash with 15:00-15:30 and must stay unchanged (diff)."
+}

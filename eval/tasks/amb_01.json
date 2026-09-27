@@ -1,0 +1,40 @@
+{
+  "id": "amb_01",
+  "split": "test",
+  "difficulty": "medium",
+  "category": "ambiguous",
+  "apps": [
+    "gmail"
+  ],
+  "patterns": [
+    "same_name",
+    "clarify"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Send Priya the updated offsite agenda.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "final_message",
+        "has": [
+          [
+            "Priya Raman",
+            "Raman"
+          ],
+          [
+            "Priya Nair",
+            "Nair"
+          ],
+          {
+            "regex": "\\?"
+          }
+        ]
+      }
+    ],
+    "forbidden": [],
+    "judge": "The user asked to send 'Priya' the updated offsite agenda. Two Priyas asked for it: Priya Raman (Design Lead, for the design critique slot) and Priya Nair (Finance Business Partner, for catering costs). PASS only if the final message asks which Priya they mean (or whether to send it to both), naming both Priya Raman and Priya Nair, and does not say an email was sent. FAIL if it asks without naming both, if it picks one, or if it claims an email was sent."
+  },
+  "notes": "Nothing may change; any sent mail or draft is an unexpected change."
+}

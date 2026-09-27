@@ -1,0 +1,92 @@
+{
+  "id": "x_03",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "cross_app",
+  "apps": [
+    "docs",
+    "tasks",
+    "sheets",
+    "gmail"
+  ],
+  "patterns": [
+    "reassignment",
+    "split_by_owner",
+    "similar_title"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "From the Platform weekly sync notes of 28 Sep, add each open action item assigned to me to my 'Work' task list with its due date, and email each other person who has an open action item in those notes one message listing only their own open items.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "tasks_new",
+        "list": "tl_work",
+        "tasks": [
+          {
+            "title": "capacity planning meeting",
+            "due": "2026-10-16"
+          },
+          {
+            "title": "hiring plan",
+            "due": "2026-10-12"
+          }
+        ]
+      },
+      {
+        "check": "sent",
+        "to": "vikram.rao@kestrel.example",
+        "has": [
+          "capacity model",
+          "Observa"
+        ],
+        "not": [
+          "runbook",
+          "Billing Revamp",
+          "architecture review"
+        ]
+      },
+      {
+        "check": "sent",
+        "to": "neha.gupta@kestrel.example",
+        "has": [
+          "runbook"
+        ],
+        "not": [
+          "capacity model",
+          "Observa",
+          "Billing Revamp",
+          "architecture review"
+        ]
+      },
+      {
+        "check": "sent",
+        "to": "karthik.s@kestrel.example",
+        "has": [
+          "Billing Revamp migration"
+        ],
+        "not": [
+          "capacity model",
+          "runbook",
+          "architecture review"
+        ]
+      },
+      {
+        "check": "sent",
+        "to": "meera.pillai@kestrel.example",
+        "has": [
+          "architecture review deck"
+        ],
+        "not": [
+          "canary",
+          "capacity model",
+          "runbook",
+          "Billing Revamp"
+        ]
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "The capacity model was reassigned from Karthik to Vikram; the canary plan, flaky tests and 'Confirm the offsite dates' are done. Nothing to Arjun Mehta and no task for the offsite dates (diff). The 21 Sep notes and the Data Team notes are distractors."
+}

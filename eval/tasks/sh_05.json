@@ -1,0 +1,121 @@
+{
+  "id": "sh_05",
+  "split": "test",
+  "difficulty": "medium",
+  "category": "sheets",
+  "apps": [
+    "sheets"
+  ],
+  "patterns": [
+    "similar_name",
+    "comment_workflow"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Samantha left a comment on the 'Hiring Pipeline' sheet asking for some changes. Make the changes she asked for, then reply 'Updated' to her comment and resolve it.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "book",
+        "wid": "sh_pipeline",
+        "tabs": {
+          "Candidates": {
+            "grid": [
+              [
+                "Candidate",
+                "Role",
+                "Stage",
+                "Interviewer",
+                "Next step",
+                "Next step date"
+              ],
+              [
+                "Divya Menon",
+                "Frontend Engineer",
+                "Offer",
+                "",
+                "Onsite interview",
+                "29/09/2026"
+              ],
+              [
+                "Karan Shah",
+                "SRE",
+                "Offer",
+                "Meera Pillai",
+                "Offer call",
+                "09/10/2026"
+              ],
+              [
+                "Lakshmi Iyer",
+                "Backend Engineer",
+                "Phone screen done",
+                "Karthik Subramanian",
+                "Onsite interview",
+                "01/10/2026"
+              ],
+              [
+                "Rakesh Pillai",
+                "Backend Engineer",
+                "Rejected",
+                "",
+                "Onsite interview",
+                "05/10/2026"
+              ],
+              [
+                "Rakesh Pillay",
+                "Data Engineer",
+                "Phone screen",
+                "Neha Gupta",
+                "Phone screen",
+                "12/10/2026"
+              ],
+              [
+                "Arvind Rao",
+                "SRE",
+                "Rejected",
+                "Neha Gupta",
+                "—",
+                ""
+              ],
+              [
+                "Meghna Das",
+                "Frontend Engineer",
+                "Applied",
+                "",
+                "Resume review",
+                "14/10/2026"
+              ],
+              [
+                "Sanjay Kulkarni",
+                "Senior SRE",
+                "Onsite done",
+                "Neha Gupta",
+                "Debrief",
+                "12/10/2026"
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "check": "comment",
+        "wid": "sh_pipeline:s1",
+        "resolved": true,
+        "reply_has": "updated"
+      },
+      {
+        "check": "comment",
+        "wid": "sh_pipeline:s2",
+        "untouched": true
+      },
+      {
+        "check": "comment",
+        "wid": "sh_pipeline:s3",
+        "untouched": true
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "Rakesh Pillai (Backend) is rejected; Rakesh Pillay (Data) is unchanged. s3 is Samantha's older, already resolved comment."
+}

@@ -1,0 +1,36 @@
+{
+  "id": "x_02",
+  "split": "dev",
+  "difficulty": "extreme",
+  "category": "cross_app",
+  "apps": ["docs", "gmail", "tasks", "calendar"],
+  "patterns": ["relative_dates", "subtasks", "multi_calendar", "no_overlap", "lookup_in_email", "long_horizon"],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Ananya Das starts on Monday. Using the 'New Hire Onboarding Checklist — Platform' doc: create a task list called 'Ananya Onboarding' with the Week 1 items due on the dates the checklist gives, with the IT setup steps as subtasks of an 'IT setup' task; book her three intro 1:1s the way the checklist describes; and email her onboarding buddy the intro schedule.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "tasklist",
+        "title": "Ananya Onboarding",
+        "tasks": [
+          {"title": "IT setup", "due": "2026-10-12", "parent": null},
+          {"title": "laptop", "parent": "IT setup"},
+          {"title": ["2-step", "two-step", "2fa", "two-factor", "2-factor"], "parent": "IT setup"},
+          {"title": "GitHub", "parent": "IT setup"},
+          {"title": "HR induction", "due": "2026-10-12", "parent": null},
+          {"title": "Architecture Overview", "due": "2026-10-13", "parent": null},
+          {"title": "on-call handover", "due": "2026-10-14", "parent": null},
+          {"title": "pull request", "due": "2026-10-16", "parent": null}
+        ]
+      },
+      {"check": "event", "select_attendee": "meera.pillai@kestrel.example", "attendees_include": ["ananya.das@kestrel.example", "meera.pillai@kestrel.example"], "minutes": 30, "window": ["2026-10-12T14:00:00+05:30", "2026-10-14T18:00:00+05:30"], "working_hours": true, "free": ["meera.pillai@kestrel.example", "ananya.das@kestrel.example"]},
+      {"check": "event", "select_attendee": "neha.gupta@kestrel.example", "attendees_include": ["ananya.das@kestrel.example", "neha.gupta@kestrel.example"], "minutes": 30, "window": ["2026-10-12T14:00:00+05:30", "2026-10-14T18:00:00+05:30"], "working_hours": true, "free": ["neha.gupta@kestrel.example", "ananya.das@kestrel.example"]},
+      {"check": "event", "select_attendee": "farah.khan@kestrel.example", "attendees_include": ["ananya.das@kestrel.example", "farah.khan@kestrel.example"], "minutes": 30, "window": ["2026-10-12T14:00:00+05:30", "2026-10-14T18:00:00+05:30"], "working_hours": true, "free": ["farah.khan@kestrel.example", "ananya.das@kestrel.example"]},
+      {"check": "sent", "to": "vikram.rao@kestrel.example", "has": ["Meera", "Neha", "Farah"], "event_times": ["meera.pillai@kestrel.example", "neha.gupta@kestrel.example", "farah.khan@kestrel.example"]}
+    ],
+    "forbidden": []
+  },
+  "notes": "Graded by constraints, not exact slots (37/39/45 options, world.md 3.5). 'free' means no other non-declined event on that person's calendar overlaps, which includes the other intros through Ananya. Subtask due dates are not checked. The buddy (Vikram) is named only in sl_welcome; nothing is sent to Ananya (diff)."
+}

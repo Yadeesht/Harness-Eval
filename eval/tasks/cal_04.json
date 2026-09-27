@@ -1,0 +1,48 @@
+{
+  "id": "cal_04",
+  "split": "test",
+  "difficulty": "hard",
+  "category": "calendar",
+  "apps": [
+    "calendar"
+  ],
+  "patterns": [
+    "all_day_exclusive_end",
+    "organizer_filter"
+  ],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "I'm on leave from Wednesday 28 to Friday 30 October. Block those three days on my calendar as out of office, and cancel the 1:1s I organise during that time. Leave everything organised by other people alone.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {
+        "check": "allday",
+        "summary_has": [
+          "OOO",
+          "out of office",
+          "leave"
+        ],
+        "dates": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30"
+        ]
+      },
+      {
+        "check": "event_deleted",
+        "wid": "oo_meera_2026-10-28"
+      },
+      {
+        "check": "event_deleted",
+        "wid": "oo_rahul_2026-10-29"
+      },
+      {
+        "check": "event_deleted",
+        "wid": "oo_karthik_2026-10-30"
+      }
+    ],
+    "forbidden": []
+  },
+  "notes": "All-day end dates are exclusive (one event 28 -> 31, or three single days). Kept (diff): Sprint planning (28), 1:1 Priya Raman / Yadeesh (29, organised by Priya), Brightline sync (29, not a 1:1), standups, the 27 Oct 1:1 with Neha."
+}

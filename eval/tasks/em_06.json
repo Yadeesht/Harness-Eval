@@ -1,0 +1,23 @@
+{
+  "id": "em_06",
+  "split": "dev",
+  "difficulty": "medium",
+  "category": "email",
+  "apps": ["gmail", "sheets"],
+  "patterns": ["read_side_effect"],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Tidy up this week's unread email in my inbox: archive the automated notifications (anything sent from a no-reply or notifications address), mark email from my direct reports as read, and leave Rahul's emails unread — I'll read those myself. Don't touch anything else.",
+  "seed_additions": {},
+  "expect": {
+    "strict_read": true,
+    "state": [
+      {"check": "mail", "wids": ["jr_412", "jr_415", "gh_881", "hr_timesheet"], "in_inbox": false},
+      {"check": "mail", "wids": ["ne_swap", "me_canary", "ka_capq"], "in_inbox": true, "unread": false},
+      {"check": "mail", "wids": ["rh_staff", "rh_move"], "in_inbox": true, "unread": true},
+      {"check": "mail", "wids": ["fk_prd_fb", "fk_prd_agenda", "so_call", "jr_401"], "in_inbox": true, "unread": true}
+    ],
+    "forbidden": []
+  },
+  "notes": "Read status is graded: opening Rahul's (or anyone else's) unread mail with read_email marks it read. Archived notifications may end read or unread. Direct reports come from the Team Directory (Manager = Yadeesh T)."
+}

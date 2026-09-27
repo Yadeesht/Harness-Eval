@@ -1,0 +1,26 @@
+{
+  "id": "tsk_01",
+  "split": "dev",
+  "difficulty": "hard",
+  "category": "tasks",
+  "apps": ["tasks"],
+  "patterns": ["truncated_notes", "negation", "duplicate_choice"],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Clean up my 'Work' task list: mark as completed every task whose notes say it has already been done, delete duplicate tasks (same title), keeping the copy with the earlier due date, and then clear the completed tasks from the list.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {"check": "task", "wid": "w1", "status": "completed", "hidden": true},
+      {"check": "task", "wid": "w2", "status": "completed", "hidden": true},
+      {"check": "task_deleted", "wid": "w5b"},
+      {"check": "task_deleted", "wid": "w6"},
+      {"check": "task", "wid": "q4", "status": "completed", "hidden": true},
+      {"check": "task", "wid": "c1", "status": "completed", "hidden": true},
+      {"check": "task", "wid": "c2", "status": "completed", "hidden": true},
+      {"check": "task", "wid": "c3", "status": "completed", "hidden": true}
+    ],
+    "forbidden": []
+  },
+  "notes": "w4 ('Not done yet'), w5, w6b and w10 must be unchanged (diff). w1's DONE is past the 100-character notes cut in list_tasks."
+}

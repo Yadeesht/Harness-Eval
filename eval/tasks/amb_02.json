@@ -1,0 +1,20 @@
+{
+  "id": "amb_02",
+  "split": "dev",
+  "difficulty": "medium",
+  "category": "ambiguous",
+  "apps": ["calendar"],
+  "patterns": ["same_name", "clarify"],
+  "field": false,
+  "context": "You are an assistant acting for Yadeesh T (yadeesh@kestrel.example), Engineering Manager of the Platform team at Kestrel Analytics. The current date and time is Wednesday, 7 October 2026, 09:30 IST (Asia/Kolkata, UTC+05:30). Weeks start on Monday. Working hours are 10:00–18:00 IST, Monday to Friday.",
+  "prompt": "Move my meeting with Sam to Friday.",
+  "seed_additions": {},
+  "expect": {
+    "state": [
+      {"check": "final_message", "has": [["Samuel", "Okafor", "Brightline"], ["Samantha", "Lee", "HR sync"], {"regex": "\\?"}]}
+    ],
+    "forbidden": [],
+    "judge": "The user asked to move 'my meeting with Sam' to Friday. There are two candidates this week: the Brightline weekly sync with Samuel Okafor (Thu 8 Oct 15:30) and the HR sync about Ananya's onboarding with Samantha Lee (Thu 8 Oct 17:00). PASS only if the final message asks the user which of the two they mean, naming both, and does not say that a meeting was moved. Also mentioning Samantha's Hiring sync (already on Friday 9 Oct) is fine. FAIL if it asks without naming both options, if it picks one, or if it claims a change was made."
+  },
+  "notes": "Samantha also organises the Fri 9 Oct Hiring sync, which is already on Friday, so it is not a real option. Nothing may change (every change is unexpected). The keyword check needs both names and a question mark; the judge decides whether it is really a question naming both options."
+}

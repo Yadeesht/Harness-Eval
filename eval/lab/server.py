@@ -29,7 +29,8 @@ sys.path.insert(0, str(EVAL))
 sys.path.insert(0, str(EVAL / "seed"))
 
 from fastmcp import FastMCP  # noqa: E402
-from fastmcp.exceptions import ToolError  # noqa: E402
+from fastmcp.exceptions import NotFoundError, ToolError, ValidationError  # noqa: E402
+from fastmcp.server.middleware import Middleware  # noqa: E402
 from fastmcp.tools import Tool  # noqa: E402
 
 from lab.bind import all_tools, bind  # noqa: E402
@@ -37,6 +38,7 @@ from lab.workspace import Workspace  # noqa: E402
 
 SEED = EVAL / "seed" / "seed.json"
 SEED_INDEX = EVAL / "seed" / "seed_index.json"
+TASKS = EVAL / "tasks"
 
 
 def _text(result) -> str:
@@ -83,9 +85,31 @@ class Recorder:
         self.dump_state()
         return text
 
+    def reject(self, name: str, args: dict, message: str) -> None:
+        """A call the MCP layer refused before the tool ran (bad arguments, unknown tool).
+        It is logged and counts toward the cap, like any other call attempt."""
+        self.count += 1
+        self.write({"n": self.count, "tool": name, "args": args, "result": message, "error": True, "rejected": True, "ms": 0})
+
+
+class RejectedCalls(Middleware):
+    """Logs calls that fail argument validation or name an unknown tool."""
+
+    def __init__(self, recorder: Recorder):
+        self.recorder = recorder
+
+    async def on_call_tool(self, context, call_next):
+        try:
+            return await call_next(context)
+        except (ValidationError, NotFoundError) as error:
+            params = context.message
+            self.recorder.reject(params.name, dict(params.arguments or {}), f"{type(error).__name__}: {error}")
+            raise
+
 
 def build_server(ws: Workspace, recorder: Recorder) -> FastMCP:
     mcp = FastMCP("workspace")
+    mcp.add_middleware(RejectedCalls(recorder))
     for lc_tool in all_tools():
         fn = lc_tool.coroutine
         name = lc_tool.name
@@ -108,11 +132,13 @@ def build_server(ws: Workspace, recorder: Recorder) -> FastMCP:
 
 
 def load_workspace(task: str | None) -> Workspace:
+    """A fresh workspace: the seed, plus the task's seed_additions (from its task file)."""
     ws = Workspace(json.loads(SEED.read_text(encoding="utf-8")), namespace="run")
     if task:
         from build_seed import apply_additions
 
-        apply_additions(ws, task, json.loads(SEED_INDEX.read_text(encoding="utf-8")))
+        spec = json.loads((TASKS / f"{task}.json").read_text(encoding="utf-8"))
+        apply_additions(ws, spec.get("seed_additions", {}), json.loads(SEED_INDEX.read_text(encoding="utf-8")))
     return ws
 
 
