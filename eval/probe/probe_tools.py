@@ -818,9 +818,18 @@ async def main():
     parser = argparse.ArgumentParser(description="Probe app_tools against the dummy account.")
     parser.add_argument("--apps", default=",".join(PROBES), help="comma-separated subset of: " + ", ".join(PROBES))
     parser.add_argument("--sweep", metavar="TAG", help="only delete leftovers of the run with this tag")
+    parser.add_argument("--fake", action="store_true", help="run against the lab's fake workspace instead of Google")
     args = parser.parse_args()
 
-    me = verify_account()
+    if args.fake:
+        sys.path.insert(0, str(REPO / "eval"))
+        from lab.bind import bind
+        from lab.workspace import Workspace, empty_state
+
+        me = bind(Workspace(empty_state("2026-10-07T09:30:00+05:30", "yadeesh@kestrel.example", "Yadeesh T"))).user_email
+        print(f"Fake workspace bound for {me}", flush=True)
+    else:
+        me = verify_account()
     if args.sweep:
         await sweep(args.sweep)
         return
@@ -832,7 +841,7 @@ async def main():
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     tag = "prb" + "".join(random.choices(string.ascii_lowercase, k=6))
-    probe = Probe(OUT_DIR / f"{tag}.jsonl")
+    probe = Probe(OUT_DIR / f"{'fake_' if args.fake else ''}{tag}.jsonl")
     print(f"Probe tag: {tag}  (if the run dies, clean up with --sweep {tag})", flush=True)
     try:
         for app in apps:

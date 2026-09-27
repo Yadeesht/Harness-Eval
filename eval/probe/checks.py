@@ -52,7 +52,7 @@ def main() -> int:
             return 1
         path = logs[-1]
     records = load(path)
-    tag = path.stem
+    tag = path.stem.removeprefix("fake_")
 
     def find(tool: str, note: str | None = None, startswith: bool = False) -> list[dict]:
         out = []
@@ -84,6 +84,12 @@ def main() -> int:
         "read_email keeps ₹ and spaces between lines",
         find("read_email", ""),
         lambda rs: "₹1,84,500" in parsed(rs[0])["content"] and "2026 Regards" in parsed(rs[0])["content"],
+    )
+
+    check(
+        "list_filters shows an existing filter",
+        find("list_filters", "after direct create"),
+        lambda rs: parsed(rs[0])["count"] >= 1,
     )
 
     # Calendar
