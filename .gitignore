@@ -17,3 +17,13 @@
 **/dummy.txt
 **/log_details.txt
 **/checkpoint_text_dump.txt
+
+**/agentic_ai.egg-info
+**/temp/
+
+# Evaluation external agent, venvs, and run artifacts
+**/eval/hermes-agent/
+**/eval/venvs/
+**/eval/runs/
+# Tool probe raw output (real account data, local only)
+**/eval/probe/out/
