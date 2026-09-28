@@ -7,6 +7,12 @@ from utils.helper import setup_logger, count_tokens
 logger = setup_logger(__name__)
 
 
+def last_value(current: Optional[str], new: Optional[str]) -> Optional[str]:
+    """Reducer for current_agent: if two tool calls in one step both set it (e.g. two
+    parallel handoffs), keep the last instead of failing the whole graph."""
+    return new
+
+
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     supervisor_messages: Annotated[list, add_messages]
@@ -16,7 +22,7 @@ class State(TypedDict):
     data_messages: Annotated[list, add_messages]
     summary: Optional[str]
     next: Optional[str]
-    current_agent: Optional[str]
+    current_agent: Annotated[Optional[str], last_value]
 
 
 def route_after_supervisor(state: State):

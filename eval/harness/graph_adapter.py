@@ -225,8 +225,11 @@ async def run(args) -> dict:
             result["errors"].append(f"{type(error).__name__}: {error}")
             result["traceback"] = traceback.format_exc()[-4000:]
         if not state:
-            snapshot = await graph.aget_state(run_config)
-            state = dict(snapshot.values) if snapshot and snapshot.values else {}
+            try:
+                snapshot = await graph.aget_state(run_config)
+                state = dict(snapshot.values) if snapshot and snapshot.values else {}
+            except Exception as error:  # the checkpoint itself can hold the failed step's writes
+                result["errors"].append(f"state after the error unavailable: {type(error).__name__}")
         if stop == "completed" and steps.calls > limits["max_llm_calls"]:
             stop = "step_limit"  # the supervisor turns exceptions into an [ERROR] reply instead of raising
         result["wall_s"] = round(time.perf_counter() - started, 2)

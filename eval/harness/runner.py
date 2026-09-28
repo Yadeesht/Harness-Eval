@@ -46,7 +46,9 @@ from common import (  # noqa: E402
 sys.path.insert(0, str(EVAL))
 from grade.diff import diff  # noqa: E402
 from grade.grader import grade  # noqa: E402
+from grade.judge import judge, judge_key  # noqa: E402
 
+PY = str(ROOT / ".venv" / "Scripts" / "python.exe")
 SERVER = EVAL / "lab" / "server.py"
 RELAY = HERE / "llm_relay.py"
 SEED_INDEX = EVAL / "seed" / "seed_index.json"
@@ -94,7 +96,8 @@ def _rel(path: Path) -> str:
 
 def _git(args: list[str], cwd: Path) -> str:
     try:
-        return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, timeout=30).stdout.strip()
+        # strip newlines only: `git status --porcelain` lines start with a meaningful space
+        return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, timeout=30).stdout.strip("\n")
     except (OSError, subprocess.SubprocessError):
         return ""
 
@@ -199,6 +202,54 @@ def audit(calls: list[dict], config: dict, model: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# LLM judge (ambiguous / impossible tasks, only when every code check passed)
+# ---------------------------------------------------------------------------
+
+
+class Judge:
+    """The LLM judge behind its own relay (started on first use, one per runner invocation).
+    Verdicts are cached in the run folder, keyed by rubric, prompt, final message and judge
+    settings, so --rebuild never pays twice for the same judgement."""
+
+    def __init__(self, config: dict, out: Path):
+        self.config, self.out = config, out
+        self.relay: subprocess.Popen | None = None
+        self.client = None
+
+    def _client(self):
+        if self.client is None:
+            from openai import OpenAI
+
+            port = free_port()
+            self.relay = _start([PY, str(RELAY), "--port", str(port), "--out", str(self.out / "judge_llm"), "--save-bodies"], self.out / "judge_relay.log")
+            _wait_port(port, self.relay, "judge relay")
+            limits = self.config["limits"]
+            self.client = OpenAI(base_url=f"http://127.0.0.1:{port}{self.config['endpoint']['api_path']}", api_key="eval-relay",
+                                 max_retries=limits["llm_max_retries"], timeout=limits["llm_timeout_s"])
+        return self.client
+
+    def verdict(self, run_dir: Path, task: dict, final_message: str) -> dict:
+        settings = self.config["judge"]
+        rubric = task["expect"]["judge"]
+        key = judge_key(rubric, task["prompt"], final_message, {k: settings.get(k) for k in ("deployment", "reasoning_effort")})
+        cache = run_dir / "judge.json"
+        if cache.exists():
+            cached = load_json(cache)
+            if cached.get("key") == key:
+                return cached
+        try:
+            result = judge(self._client(), settings, rubric, task["prompt"], final_message)
+        except Exception as error:  # a judge failure leaves the run undecided, never passed
+            result = {"verdict": "ERROR", "reason": f"{type(error).__name__}: {error}"[:300]}
+        result["key"] = key
+        write_json(cache, result)
+        return result
+
+    def stop(self) -> None:
+        _stop(self.relay)
+
+
+# ---------------------------------------------------------------------------
 # one run
 # ---------------------------------------------------------------------------
 
@@ -214,7 +265,7 @@ def execute_run(config: dict, task_id: str, harness: str, model: str, run_no: in
     run_dir = run_dir_of(out, task_id, harness, model, run_no)
     shutil.rmtree(run_dir, ignore_errors=True)
     run_dir.mkdir(parents=True)
-    py = str(ROOT / ".venv" / "Scripts" / "python.exe")
+    py = PY
     h = config["harnesses"][harness]
     server_port, relay_port = free_port(), free_port()
     server = relay = None
@@ -256,8 +307,9 @@ def execute_run(config: dict, task_id: str, harness: str, model: str, run_no: in
     return run_dir
 
 
-def build_record(config: dict, task_id: str, harness: str, model: str, run_no: int, run_dir: Path, index: dict, vers: dict) -> dict:
-    """Grade one finished run folder and assemble its record (safe to repeat: no model calls)."""
+def build_record(config: dict, task_id: str, harness: str, model: str, run_no: int, run_dir: Path, index: dict, vers: dict, judge_service: "Judge") -> dict:
+    """Grade one finished run folder and assemble its record (safe to repeat: no harness model calls;
+    the judge is only called for a judgement not already cached in the run folder)."""
     task = read_task(task_id)
     model_cfg = model_settings(config, model)
     runner_errors = list(load_json(run_dir / "runner_errors.json")) if (run_dir / "runner_errors.json").exists() else []
@@ -282,7 +334,14 @@ def build_record(config: dict, task_id: str, harness: str, model: str, run_no: i
     relay_errors = [f"model call #{c['n']} -> HTTP {c.get('status')}: {(c.get('error') or '')[:200]}" for c in llm_calls if _is_model_call(c) and (c.get("status") or 0) >= 400]
     transcript = result.get("transcript", [])
     capped = [c for c in tool_calls if c.get("capped")]
-    judge_pending = bool(graded.get("judge_pending"))
+    passed: bool | None = bool(graded["passed"])
+    failed_checks = list(graded["failed_checks"])
+    judged = None
+    if graded.get("judge_pending"):  # code checks passed; the judge decides
+        judged = judge_service.verdict(run_dir, task, result.get("final_message", ""))
+        passed = {"PASS": True, "FAIL": False}.get(judged["verdict"])  # ERROR / UNPARSEABLE: undecided
+        if judged["verdict"] != "PASS":
+            failed_checks.append(f"[judge] {judged['verdict']}: {judged.get('reason', '')}")
     record = {
         "task_id": task_id,
         "split": task["split"],
@@ -292,9 +351,9 @@ def build_record(config: dict, task_id: str, harness: str, model: str, run_no: i
         "model": model,
         "run": run_no,
         "settings_hash": settings_hash(config, model),
-        "passed": None if judge_pending else bool(graded["passed"]),
-        "failed_checks": graded["failed_checks"],
-        "judge": {"status": "pending", "rubric": task["expect"].get("judge")} if judge_pending else None,
+        "passed": passed,
+        "failed_checks": failed_checks,
+        "judge": {k: judged.get(k) for k in ("verdict", "reason", "model", "key")} if judged else None,
         "final_message": result.get("final_message", ""),
         "stop_reason": result.get("stop_reason"),
         **{k: metrics[k] for k in ("input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens", "cost_usd", "llm_latency_s", "n_steps")},
@@ -357,6 +416,7 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     index = load_json(SEED_INDEX)
     records_path = out / "records.jsonl"
+    judge_service = Judge(config, out)
     if args.rebuild:  # re-grade existing run folders into a fresh records.jsonl, no model calls
         records_path.unlink(missing_ok=True)
     for task_id, run_no, model, harness in plan:
@@ -368,10 +428,10 @@ def main() -> int:
                 continue
         else:
             run_dir = execute_run(config, task_id, harness, model, run_no, out)
-        record = build_record(config, task_id, harness, model, run_no, run_dir, index, vers)
+        record = build_record(config, task_id, harness, model, run_no, run_dir, index, vers, judge_service)
         with records_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
-        verdict = "PASS" if record["passed"] else ("JUDGE" if record["passed"] is None else "FAIL")
+        verdict = "PASS" if record["passed"] else ("UNDEC" if record["passed"] is None else "FAIL")
         cost = f"${record['cost_usd']:.4f}" if record["cost_usd"] is not None else "$?"
         print(f"{task_id:8s} {harness:7s} {model:14s} r{run_no}  {verdict:5s} steps={record['n_steps']:<3} tools={record['n_tool_calls']:<3} "
               f"tokens={record['input_tokens']}/{record['output_tokens']} {cost} wall={record['wall_s']}s  "
@@ -381,6 +441,7 @@ def main() -> int:
         for e in record["errors"][:3]:
             print(f"    error: {e[:200]}")
     print(f"\nrecords: {_rel(records_path)}")
+    judge_service.stop()
     return 0
 
 

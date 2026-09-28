@@ -137,7 +137,9 @@ def build_graph(tool_sets, checkpointer):
     document_tools = list(document_tools) + [work_completion]
     data_tools = list(data_tools) + [work_completion]
 
-    supervisor_llm = build_llm_with_tools(supervisor_tools)
+    # One handoff per supervisor turn: parallel route_to_agent calls would hand the task
+    # to two workers at once, and only one of them can be the active agent.
+    supervisor_llm = build_llm_with_tools(supervisor_tools, parallel_tool_calls=False)
     communication_llm = build_llm_with_tools(communication_tools)
     planning_llm = build_llm_with_tools(planning_tools)
     document_llm = build_llm_with_tools(document_tools)
