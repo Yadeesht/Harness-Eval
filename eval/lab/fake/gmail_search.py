@@ -6,6 +6,8 @@ Observed on the dummy account (eval/design/tool_reference.md §2.1):
 - quoted phrases, OR, {a b}, -word, subject:, from:, to:, in:, is:, label:,
   after:/before:, older_than:/newer_than:, category:, has:attachment
 - label: takes the label *name* ("Parent/Child", "parent-child"), never the ID
+- OR binds tighter than the implicit AND: "a OR b c" is (a OR b) AND c
+  (probed 2026-09-28: "in:inbox OR in:sent is:read" = "(in:inbox OR in:sent) is:read")
 """
 
 from __future__ import annotations
@@ -39,6 +41,7 @@ class Group:
 
     alternatives: list[list[Any]]
     negate: bool = False
+    is_or: bool = False  # built from a bare "a OR b" chain, so the chain can grow
 
 
 def _lex(query: str) -> list[str]:
@@ -72,47 +75,60 @@ def parse(query: str) -> Group:
     toks = _lex(query)
     pos = 0
 
-    def parse_seq(stop: set[str]) -> Group:
+    def parse_item(tok: str) -> Any:
         nonlocal pos
-        alternatives: list[list[Any]] = [[]]
+        negate = False
+        if tok.startswith("-") and len(tok) > 1:
+            negate, tok = True, tok[1:]
+        if tok in ("(", "{"):
+            close = ")" if tok == "(" else "}"
+            inner = parse_seq({close})
+            pos += 1  # skip closer
+            if tok == "{":  # braces mean OR of the members
+                members = [item for alt in inner.alternatives for item in alt]
+                inner = Group([[m] for m in members])
+            inner.negate = negate
+            return inner
+        if tok.startswith('"'):
+            return Term("phrase", tok.strip('"'), negate)
+        if ":" in tok:
+            op, _, value = tok.partition(":")
+            if value == "" and pos < len(toks) and toks[pos] in ("(", "{"):
+                # operator applied to a group, e.g. subject:(expense approval)
+                opener = toks[pos]
+                pos += 1
+                inner = parse_seq({")" if opener == "(" else "}"})
+                pos += 1
+                grouped = _apply_op(inner, op.lower(), any_of=opener == "{")
+                grouped.negate = negate
+                return grouped
+            return Term(op.lower(), value.strip('"'), negate)
+        return Term("word", tok, negate)
+
+    def parse_seq(stop: set[str]) -> Group:
+        # OR binds tighter than the implicit AND, as on the real account:
+        # "a OR b c" means (a OR b) AND c (eval/design/tool_reference.md §2.1).
+        nonlocal pos
+        items: list[Any] = []
+        pending_or = False
         while pos < len(toks) and toks[pos] not in stop:
             tok = toks[pos]
             pos += 1
             if tok == "OR":
-                alternatives.append([])
+                pending_or = bool(items)
                 continue
-            negate = False
-            if tok.startswith("-") and len(tok) > 1:
-                negate, tok = True, tok[1:]
-            if tok in ("(", "{"):
-                close = ")" if tok == "(" else "}"
-                inner = parse_seq({close})
-                pos += 1  # skip closer
-                if tok == "{":  # braces mean OR of the members
-                    members = [item for alt in inner.alternatives for item in alt]
-                    inner = Group([[m] for m in members])
-                inner.negate = negate
-                alternatives[-1].append(inner)
-                continue
-            if tok.startswith('"'):
-                alternatives[-1].append(Term("phrase", tok.strip('"'), negate))
-                continue
-            if ":" in tok:
-                op, _, value = tok.partition(":")
-                if value == "" and pos < len(toks) and toks[pos] in ("(", "{"):
-                    # operator applied to a group, e.g. subject:(expense approval)
-                    opener = toks[pos]
-                    pos += 1
-                    inner = parse_seq({")" if opener == "(" else "}"})
-                    pos += 1
-                    grouped = _apply_op(inner, op.lower(), any_of=opener == "{")
-                    grouped.negate = negate
-                    alternatives[-1].append(grouped)
-                    continue
-                alternatives[-1].append(Term(op.lower(), value.strip('"'), negate))
-                continue
-            alternatives[-1].append(Term("word", tok, negate))
-        return Group([a for a in alternatives if a] or [[]])
+            item = parse_item(tok)
+            if pending_or:
+                prev = items.pop()
+                if isinstance(prev, Group) and prev.is_or:
+                    prev.alternatives.append([item])
+                    items.append(prev)
+                else:
+                    items.append(Group([[prev], [item]], is_or=True))
+                pending_or = False
+            else:
+                items.append(item)
+        return Group([items])
 
     return parse_seq(set())
 

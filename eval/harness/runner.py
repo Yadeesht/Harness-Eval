@@ -53,6 +53,11 @@ SERVER = EVAL / "lab" / "server.py"
 RELAY = HERE / "llm_relay.py"
 SEED_INDEX = EVAL / "seed" / "seed_index.json"
 MAX_RUNS_WITHOUT_YES = 4
+STARTUP_ATTEMPTS = 2  # server + relay start; a retry happens before any model call
+
+
+class StartupError(RuntimeError):
+    """The server or relay never came up, so the harness never ran (an infrastructure failure)."""
 
 
 # ---------------------------------------------------------------------------
@@ -258,6 +263,45 @@ def run_dir_of(out: Path, task_id: str, harness: str, model: str, run_no: int) -
     return out / task_id / harness / model / f"run{run_no}"
 
 
+def _start_services(config: dict, task_id: str, run_dir: Path, env: dict) -> tuple[subprocess.Popen, subprocess.Popen, int, int]:
+    """Start the fake MCP server and the LLM relay; retry once on a start failure.
+    Nothing has called a model yet, so a retry cannot change the run."""
+    limits = config["limits"]
+    last_error: RuntimeError | None = None
+    for attempt in range(1, STARTUP_ATTEMPTS + 1):
+        for sub in ("server", "llm"):
+            shutil.rmtree(run_dir / sub, ignore_errors=True)
+        server_port, relay_port = free_port(), free_port()
+        server = _start([PY, str(SERVER), "--out", str(run_dir / "server"), "--task", task_id, "--cap", str(limits["tool_call_cap"]), "--port", str(server_port)], run_dir / "server.log", env=env)
+        relay_cmd = [PY, str(RELAY), "--port", str(relay_port), "--out", str(run_dir / "llm")]
+        if config["relay"].get("save_bodies"):
+            relay_cmd.append("--save-bodies")
+        relay = _start(relay_cmd, run_dir / "relay.log")
+        try:
+            _wait_port(server_port, server, "MCP server")
+            _wait_port(relay_port, relay, "LLM relay")
+            return server, relay, server_port, relay_port
+        except RuntimeError as error:
+            last_error = error
+            _stop(relay)
+            _stop(server)
+            print(f"    startup attempt {attempt}/{STARTUP_ATTEMPTS} failed: {error}", flush=True)
+    raise StartupError(str(last_error))
+
+
+def infra_failure(run_dir: Path) -> str | None:
+    """The reason a run never reached the harness (server or relay didn't start), else None."""
+    marker = run_dir / "infra_error.json"
+    if marker.exists():
+        return load_json(marker)["error"]
+    errors_path = run_dir / "runner_errors.json"
+    if not (run_dir / "adapter.json").exists() and errors_path.exists():  # runs from before the marker existed
+        for e in load_json(errors_path):
+            if "did not open port" in e or "exited early" in e:
+                return e
+    return None
+
+
 def execute_run(config: dict, task_id: str, harness: str, model: str, run_no: int, out: Path) -> Path:
     """Start server, relay and adapter for one run; everything lands in the run folder."""
     limits = config["limits"]
@@ -265,20 +309,12 @@ def execute_run(config: dict, task_id: str, harness: str, model: str, run_no: in
     run_dir = run_dir_of(out, task_id, harness, model, run_no)
     shutil.rmtree(run_dir, ignore_errors=True)
     run_dir.mkdir(parents=True)
-    py = PY
     h = config["harnesses"][harness]
-    server_port, relay_port = free_port(), free_port()
     server = relay = None
     runner_errors: list[str] = []
     try:
         quiet_env = sanitized_env({"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"})
-        server = _start([py, str(SERVER), "--out", str(run_dir / "server"), "--task", task_id, "--cap", str(limits["tool_call_cap"]), "--port", str(server_port)], run_dir / "server.log", env=quiet_env)
-        relay_cmd = [py, str(RELAY), "--port", str(relay_port), "--out", str(run_dir / "llm")]
-        if config["relay"].get("save_bodies"):
-            relay_cmd.append("--save-bodies")
-        relay = _start(relay_cmd, run_dir / "relay.log")
-        _wait_port(server_port, server, "MCP server")
-        _wait_port(relay_port, relay, "LLM relay")
+        server, relay, server_port, relay_port = _start_services(config, task_id, run_dir, quiet_env)
         adapter_cmd = [
             str(ROOT / h["python"]), str(ROOT / h["adapter"]),
             "--task", task_id, "--model", model, "--run-id", run_id,
@@ -292,6 +328,9 @@ def execute_run(config: dict, task_id: str, harness: str, model: str, run_no: in
         except subprocess.TimeoutExpired:
             adapter.kill()
             runner_errors.append(f"run timeout after {limits['run_timeout_s']}s")
+    except StartupError as error:
+        runner_errors.append(str(error))
+        write_json(run_dir / "infra_error.json", {"stage": "startup", "attempts": STARTUP_ATTEMPTS, "error": str(error)})
     except RuntimeError as error:
         runner_errors.append(str(error))
     finally:
@@ -336,8 +375,12 @@ def build_record(config: dict, task_id: str, harness: str, model: str, run_no: i
     capped = [c for c in tool_calls if c.get("capped")]
     passed: bool | None = bool(graded["passed"])
     failed_checks = list(graded["failed_checks"])
+    failure_category = None
     judged = None
-    if graded.get("judge_pending"):  # code checks passed; the judge decides
+    infra = infra_failure(run_dir)
+    if infra:  # the harness never ran: not an agent result, so not graded
+        passed, failed_checks, failure_category = None, [f"[infra] {infra}"], "infra_error"
+    elif graded.get("judge_pending"):  # code checks passed; the judge decides
         judged = judge_service.verdict(run_dir, task, result.get("final_message", ""))
         passed = {"PASS": True, "FAIL": False}.get(judged["verdict"])  # ERROR / UNPARSEABLE: undecided
         if judged["verdict"] != "PASS":
@@ -361,7 +404,7 @@ def build_record(config: dict, task_id: str, harness: str, model: str, run_no: i
         "n_tool_calls": len(tool_calls),
         "n_model_tool_calls": sum(len(m.get("tool_calls") or []) for m in transcript if m.get("role") == "assistant"),
         "errors": (result.get("errors") or []) + relay_errors + runner_errors + ([f"tool-call cap hit: {len(capped)} call(s) refused"] if capped else []),
-        "failure_category": None,
+        "failure_category": failure_category,
         "trajectory": {
             "messages": transcript,
             "tool_calls": [{k: c.get(k) for k in ("n", "tool", "args", "result", "error", "rejected", "capped", "ms")} for c in tool_calls],
@@ -394,14 +437,29 @@ def main() -> int:
     parser.add_argument("--out", required=True, help="folder for records.jsonl and the run folders")
     parser.add_argument("--yes", action="store_true", help=f"confirm a batch of more than {MAX_RUNS_WITHOUT_YES} runs")
     parser.add_argument("--rebuild", action="store_true", help="re-grade the existing run folders (no model calls)")
+    parser.add_argument("--redo-infra", action="store_true",
+                        help="re-run only the runs whose server/relay never started, then re-grade every run into a fresh records.jsonl")
     args = parser.parse_args()
+    if args.rebuild and args.redo_infra:
+        parser.error("use either --rebuild or --redo-infra")
 
     config = load_config()
     for model in args.models:
         model_settings(config, model)  # fail before starting anything
     plan = [(t, r, m, h) for t in args.tasks for r in range(1, args.runs + 1) for m in args.models for h in args.harnesses]
     print(f"{len(plan)} run(s): {len(args.tasks)} task(s) x {args.runs} run(s) x {len(args.models)} model(s) x {len(args.harnesses)} harness(es)")
-    if len(plan) > MAX_RUNS_WITHOUT_YES and not args.yes and not args.rebuild:
+
+    out = Path(args.out)
+    if not out.is_absolute():
+        out = ROOT / out
+    to_execute = set(plan)
+    if args.rebuild:
+        to_execute = set()
+    elif args.redo_infra:
+        to_execute = {p for p in plan if infra_failure(run_dir_of(out, p[0], p[3], p[2], p[1]))}
+        print(f"--redo-infra: {len(to_execute)} run(s) never reached the harness and will be re-run: "
+              f"{sorted(f'{t} {h} {m} r{r}' for t, r, m, h in to_execute)}")
+    if len(to_execute) > MAX_RUNS_WITHOUT_YES and not args.yes:
         print(f"More than {MAX_RUNS_WITHOUT_YES} LLM runs: re-run with --yes to confirm.")
         return 2
 
@@ -410,28 +468,24 @@ def main() -> int:
         print(f"FAIRNESS: Hermes checkout is {vers['hermes_commit'][:10]}, config pins {config['harnesses']['hermes']['commit'][:10]}")
         return 2
 
-    out = Path(args.out)
-    if not out.is_absolute():
-        out = ROOT / out
     out.mkdir(parents=True, exist_ok=True)
     index = load_json(SEED_INDEX)
     records_path = out / "records.jsonl"
     judge_service = Judge(config, out)
-    if args.rebuild:  # re-grade existing run folders into a fresh records.jsonl, no model calls
+    if args.rebuild or args.redo_infra:  # re-grade existing run folders into a fresh records.jsonl
         records_path.unlink(missing_ok=True)
     for task_id, run_no, model, harness in plan:
         started = datetime.now()
-        if args.rebuild:
-            run_dir = run_dir_of(out, task_id, harness, model, run_no)
-            if not (run_dir / "adapter.json").exists():
-                print(f"{task_id} {harness} {model} r{run_no}: no run folder, skipped")
-                continue
-        else:
+        run_dir = run_dir_of(out, task_id, harness, model, run_no)
+        if (task_id, run_no, model, harness) in to_execute:
             run_dir = execute_run(config, task_id, harness, model, run_no, out)
+        elif not ((run_dir / "adapter.json").exists() or infra_failure(run_dir)):
+            print(f"{task_id} {harness} {model} r{run_no}: no run folder, skipped")
+            continue
         record = build_record(config, task_id, harness, model, run_no, run_dir, index, vers, judge_service)
         with records_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
-        verdict = "PASS" if record["passed"] else ("UNDEC" if record["passed"] is None else "FAIL")
+        verdict = "PASS" if record["passed"] else ("INFRA" if record["failure_category"] == "infra_error" else "UNDEC" if record["passed"] is None else "FAIL")
         cost = f"${record['cost_usd']:.4f}" if record["cost_usd"] is not None else "$?"
         print(f"{task_id:8s} {harness:7s} {model:14s} r{run_no}  {verdict:5s} steps={record['n_steps']:<3} tools={record['n_tool_calls']:<3} "
               f"tokens={record['input_tokens']}/{record['output_tokens']} {cost} wall={record['wall_s']}s  "

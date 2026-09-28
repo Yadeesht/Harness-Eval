@@ -86,6 +86,7 @@ The first probe found 17 tools broken or misreporting. All were fixed in `app_to
 | `"due date"` (quoted phrase) | matches |
 | `subject:`, `from:me`, `to:me`, `in:sent`, `in:inbox`, `is:unread`, `newer_than:1d`, `older_than:1d`, `after:YYYY/MM/DD`, `category:primary`, `has:attachment` | behave as Gmail documents |
 | `a OR b`, `{a b}`, `-word` | work |
+| `a OR b c` (OR next to other terms) | means `(a OR b) c`: OR binds tighter than the implicit AND. Probed 2026-09-28: `in:inbox OR in:sent is:read` returned exactly the same messages as `(in:inbox OR in:sent) is:read` (1,009), not `in:inbox OR (in:sent is:read)` (3,500+). The fake had it the other way round until then (dev1 em_06 graph run 2). |
 | `label:Parent/Child`, `label:parent-child`, `label:"Parent/Child"` | match |
 | `label:Label_3` (label **ID**) | **no match** (use `search_by_label` for IDs) |
 | no hits | `{"count": 0, "emails": [], "error": null}` |

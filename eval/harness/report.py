@@ -2,7 +2,8 @@
 
     .venv/Scripts/python.exe eval/harness/report.py eval/runs/dev1/records.jsonl
 
-Undecided runs (judge error) count as not passed and are listed separately. Consistency is
+Undecided runs (judge error) count as not passed and are listed separately. Runs whose server or
+relay never started (failure_category infra_error) are left out and listed. Consistency is
 the number of tasks passed on every run. Cost per success is total cost / passed runs.
 """
 
@@ -21,7 +22,12 @@ def mean(xs: list) -> float:
 
 def main() -> int:
     path = Path(sys.argv[1] if len(sys.argv) > 1 else "eval/runs/dev1/records.jsonl")
-    recs = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    all_recs = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    infra = [r for r in all_recs if r.get("failure_category") == "infra_error"]
+    recs = [r for r in all_recs if r.get("failure_category") != "infra_error"]
+    if infra:
+        print(f"Left out, the harness never ran (server/relay didn't start; re-run with runner.py --redo-infra): "
+              f"{[(r['task_id'], r['harness'], r['model'], r['run']) for r in infra]}\n")
     cells = defaultdict(list)
     for r in recs:
         cells[(r["harness"], r["model"])].append(r)
