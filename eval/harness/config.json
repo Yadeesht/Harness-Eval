@@ -1,0 +1,68 @@
+{
+  "_about": "Shared settings for every eval run (AGENTS.md: one config file both adapters read). Behavioural fields feed settings_hash; prices and paths do not.",
+
+  "limits": {
+    "max_llm_calls": 100,
+    "tool_call_cap": 60,
+    "tool_timeout_s": 60,
+    "llm_timeout_s": 120,
+    "llm_max_retries": 3,
+    "run_timeout_s": 1800
+  },
+
+  "clock": {
+    "_about": "The frozen time is the seed's 'now' (eval/seed/seed.json); this is its named zone.",
+    "timezone": "Asia/Kolkata"
+  },
+
+  "endpoint": {
+    "_about": "Both harnesses call the local LLM relay, which forwards to Azure OpenAI's v1 API. Origin and key come from these environment variables, read by the relay only.",
+    "origin_env": "AZURE_AI_ENDPOINT",
+    "key_env": "AZURE_AI_CREDENTIAL",
+    "api_path": "/openai/v1"
+  },
+
+  "models": {
+    "gpt-4.1-mini": {
+      "deployment": "gpt-4.1-mini",
+      "api": "chat_completions",
+      "temperature": null,
+      "reasoning_effort": null,
+      "prices_usd_per_mtok": {"input": 0.40, "cached_input": 0.10, "output": 1.60},
+      "_prices_source": "OpenAI/Azure list price for gpt-4.1-mini; confirm against the Azure bill"
+    },
+    "gpt-6-luna": {
+      "deployment": "gpt-6-luna",
+      "api": "responses",
+      "_api_why": "Azure rejects function tools with a reasoning effort on /chat/completions for this model (decided 2026-09-28)",
+      "temperature": null,
+      "reasoning_effort": "medium",
+      "prices_usd_per_mtok": null,
+      "_todo": "prices still needed"
+    }
+  },
+
+  "harnesses": {
+    "graph": {
+      "python": ".venv/Scripts/python.exe",
+      "adapter": "eval/harness/graph_adapter.py",
+      "context_injection": "appended to every agent's system prompt (supervisor + 4 workers), after a blank line",
+      "checkpointer": "fresh InMemorySaver, new thread per run"
+    },
+    "hermes": {
+      "python": "eval/venvs/hermes/Scripts/python.exe",
+      "adapter": "eval/harness/hermes_adapter.py",
+      "checkout": "eval/hermes-agent",
+      "commit": "d0288be5b3330d2442e3907185b8e9d0958297bb",
+      "provider": "azure-foundry",
+      "api_modes": {"chat_completions": "chat_completions", "responses": "codex_responses"},
+      "platform": "batch",
+      "tool_search": "default (auto = on)",
+      "context_injection": "ephemeral_system_prompt (appended to the system prompt after a blank line)"
+    }
+  },
+
+  "relay": {
+    "save_bodies": true
+  }
+}
