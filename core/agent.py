@@ -100,6 +100,20 @@ AGENT_MESSAGE_KEY = {
 }
 
 
+def _visible_text(content) -> str:
+    """The text of a message's content (the Responses API gives a list of blocks,
+    including reasoning items that aren't text)."""
+    if isinstance(content, str):
+        return content
+    parts = []
+    for block in content or []:
+        if isinstance(block, str):
+            parts.append(block)
+        elif isinstance(block, dict) and block.get("type") in ("text", "output_text"):
+            parts.append(block.get("text", ""))
+    return "".join(parts)
+
+
 def _resolve_agent_messages(state: State, agent_name: str):
     message_key = AGENT_MESSAGE_KEY.get(agent_name, "messages")
     return state.get(message_key, []) or state.get("messages", [])
@@ -259,7 +273,7 @@ def agent_node_factory(llm_with_tools, system_prompt, agent_name: str):
         logger.info("=" * 80)
         if last_messages:
             content_preview = sanitize_history(last_messages)
-            content_preview = json.dumps(content_preview, indent=2)
+            content_preview = json.dumps(content_preview[-5:], indent=2)
             logger.info(f"📝 Content preview: {content_preview}")
 
         logger.info("=" * 80)
@@ -331,11 +345,12 @@ def agent_node_factory(llm_with_tools, system_prompt, agent_name: str):
         )
 
         message_key = AGENT_MESSAGE_KEY.get(current_agent_name, "messages")
-        return {
+        update = {
             "messages": [agent_message],
             message_key: [agent_message],
             "current_agent": current_agent_name,
         }
+        return update
 
     return agent_node
 

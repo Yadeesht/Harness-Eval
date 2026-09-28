@@ -67,8 +67,11 @@ def route_after_data_tools(state: State):
 
 
 def internal_agent_route(state: State) -> str:
-    """Route from agent node to tools or END"""
+    """Route from agent node to tools, to the supervisor (plain-text reply), or END (error)"""
     current_agent = state.get("current_agent", "")
+    if current_agent == "supervisor":
+        # The worker replied in plain text and handed its reply to the supervisor to review.
+        return "supervisor"
     agent_key_map = {
         "communication_agent": "communication_messages",
         "planning_agent": "planning_messages",

@@ -36,7 +36,9 @@ import app_tools.tools.google.gtask_tools
 
 from config.settings import CHECKPOINT_DB, DEFAULT_THREAD_ID
 from core.graph import build_graph
-from utils.helper import request_counter, setup_logger
+from rich.markdown import Markdown
+from rich.panel import Panel
+from utils.helper import console, request_counter, setup_logger
 
 logger = setup_logger(__name__)
 
@@ -50,37 +52,46 @@ AGENT_MESSAGE_KEY = {
 }
 
 
-def keyword_listener(queue: asyncio.Queue, loop: asyncio.AbstractEventLoop, agent_state):
-    """Read stdin on a dedicated daemon thread.
-
-    `loop.run_in_executor(None, input)` schedules the blocking read on
-    asyncio's default ThreadPoolExecutor, which `asyncio.run()` waits on
-    (`loop.shutdown_default_executor()`) before the process can exit. That
-    made the process hang after "Goodbye!" until one more Enter press
-    unblocked the pending input() call. A plain daemon thread isn't awaited
-    by asyncio.run(), so the process can exit immediately.
-    """
+def keyword_listener(
+    queue: asyncio.Queue,
+    loop: asyncio.AbstractEventLoop,
+    agent_state,
+    turn_ready: threading.Event,
+):
+    """Read stdin on a dedicated daemon thread."""
     while True:
+        turn_ready.wait()
         try:
+            console.print("\n[bold #D97757]You[/] [bold #D97757]❯[/] ", end="")
             user_input = input()
-        except EOFError:
+        except (EOFError, KeyboardInterrupt):
+            try:
+                asyncio.run_coroutine_threadsafe(
+                    queue.put(("TEXT", "exit")), loop
+                ).result()
+            except Exception:
+                pass
             break
         except Exception as e:
             logger.error(f"Error in keyword listener: {e}")
             continue
 
-        if user_input.strip():
-            agent_state["last_interaction"] = time.time()
-            try:
-                asyncio.run_coroutine_threadsafe(
-                    queue.put(("TEXT", user_input.strip())), loop
-                ).result()
-            except Exception as e:
-                logger.error(f"Failed to enqueue user input: {e}")
+        if not user_input.strip():
+            continue
+
+        turn_ready.clear()
+        agent_state["last_interaction"] = time.time()
+        try:
+            asyncio.run_coroutine_threadsafe(
+                queue.put(("TEXT", user_input.strip())), loop
+            ).result()
+        except Exception as e:
+            logger.error(f"Failed to enqueue user input: {e}")
 
 
 async def main():
     start_time = datetime.now()
+    console.rule("[bold #D97757]Personal Assistant Agent[/]")
     logger.info("🚀 Starting Agent")
 
     try:
@@ -107,13 +118,6 @@ async def main():
             checkpointer = AsyncSqliteSaver(connection)
             graph = build_graph(tool_sets, checkpointer)
 
-            # g = graph.get_graph()
-
-            # png_bytes = g.draw_mermaid_png()
-
-            # with open("docs/images/agent_structure_graph.png", "wb") as f:
-            #     f.write(png_bytes)
-
             config = {
                 "configurable": {
                     "thread_id": DEFAULT_THREAD_ID,
@@ -124,15 +128,16 @@ async def main():
 
             event_queue = asyncio.Queue()
             loop = asyncio.get_running_loop()
+            turn_ready = threading.Event()
 
             threading.Thread(
                 target=keyword_listener,
-                args=(event_queue, loop, agent_state),
+                args=(event_queue, loop, agent_state, turn_ready),
                 daemon=True,
             ).start()
 
-            logger.info("⌨️ Type your message")
-            logger.info("💡 Type 'exit' or 'quit' to stop\n")
+            console.print("[dim]Type your message below. Type 'exit' to quit or 'clear' to reset screen.[/dim]")
+            turn_ready.set()
 
             state = {"messages": []}
 
@@ -141,11 +146,15 @@ async def main():
 
                 agent_state["last_interaction"] = time.time()
 
-                if query.lower() in ["exit", "quit", "bye"]:
-                    logger.info("👋 Goodbye!")
+                if query.lower() in ["exit", "quit", "bye", "/exit", "/quit"]:
+                    console.print("\n[dim]👋 Goodbye![/dim]\n")
                     break
 
-                logger.info(f"👤 You: {query}")
+                if query.lower() in ["clear", "/clear", "cls"]:
+                    console.clear()
+                    console.rule("[bold #D97757]Personal Assistant Agent[/]")
+                    turn_ready.set()
+                    continue
 
                 request_counter.start_turn(query)
                 snapshot = await graph.aget_state(config)
@@ -163,7 +172,8 @@ async def main():
                     context_key: [human_message],
                 }
 
-                state = await graph.ainvoke(new_input, config=config)
+                with console.status("[bold #D97757]Thinking...[/]", spinner="dots"):
+                    state = await graph.ainvoke(new_input, config=config)
                 request_counter.end_turn()
 
                 active_agent = state.get("current_agent", current_agent)
@@ -176,17 +186,31 @@ async def main():
 
                 if isinstance(last_msg, AIMessage) and last_msg.content:
                     final_response = last_msg.content
-                    logger.info(f"🤖 Agent: {final_response}")
-
+                    console.print()
+                    console.print(
+                        Panel(
+                            Markdown(final_response),
+                            title="[bold #D97757]Assistant[/]",
+                            border_style="#D97757",
+                            padding=(1, 2),
+                        )
+                    )
                     agent_state["last_interaction"] = time.time()
+
+                turn_ready.set()
 
             end_time = datetime.now()
             execution_time = (end_time - start_time).total_seconds()
-            logger.info(
-                f"🎯 Session complete | "
-                f"LLM requests: {request_counter.session_total()} | "
-                f"Messages: {len(state['messages'])} | "
-                f"Time: {execution_time:.2f}s"
+            console.print()
+            console.print(
+                Panel(
+                    f"• LLM requests: [cyan]{request_counter.session_total()}[/]\n"
+                    f"• Messages: [cyan]{len(state['messages'])}[/]\n"
+                    f"• Elapsed Time: [cyan]{execution_time:.2f}s[/]",
+                    title="[bold]Session Complete[/bold]",
+                    border_style="dim",
+                    padding=(0, 2),
+                )
             )
 
     except Exception as e:

@@ -1,9 +1,12 @@
 import logging
 import sqlite3
+import sys
 import tiktoken
 from datetime import datetime
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 import pytz
+from rich.console import Console
+from rich.logging import RichHandler
 
 import re
 import html
@@ -77,13 +80,34 @@ def count_tokens(messages):
     return num_tokens
 
 
+try:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
+console = Console()
+
+
 def setup_logger(name: str = __name__) -> logging.Logger:
-    """Configure and return a logger instance"""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+    """Configure and return a logger instance with clean Rich formatting"""
+    root_logger = logging.getLogger()
+    if not any(isinstance(h, RichHandler) for h in root_logger.handlers):
+        root_logger.handlers = [
+            h for h in root_logger.handlers if not isinstance(h, logging.StreamHandler)
+        ]
+        handler = RichHandler(
+            console=console,
+            rich_tracebacks=True,
+            show_path=False,
+            markup=False,
+            omit_repeated_times=False,
+        )
+        handler.setFormatter(logging.Formatter("%(message)s", datefmt="[%X]"))
+        root_logger.addHandler(handler)
+        root_logger.setLevel(logging.INFO)
     return logging.getLogger(name)
 
 

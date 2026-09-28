@@ -120,7 +120,7 @@ Hard-task patterns to include: long horizon (10–15 tool calls), cross-app chai
 
 `task_id, split, harness, model, run, settings_hash, trajectory (messages, tool calls with args, tool results), final_state, passed, failed_checks, input_tokens, output_tokens, cache_read_tokens, reasoning_tokens, cost_usd, llm_latency_s, wall_s, n_tool_calls, n_steps, errors, failure_category`
 
-Seed failure categories (extend from evidence, don't guess): `wrong_tool`, `bad_args`, `premature_finish`, `loop`, `lost_context`, `didnt_ask`, `asked_unnecessarily`, `forced_impossible`, `env_error` (field layer only).
+Seed failure categories (extend from evidence, don't guess): `wrong_tool`, `bad_args`, `premature_finish`, `loop`, `lost_context`, `didnt_ask`, `asked_unnecessarily`, `forced_impossible`, `env_error` (field layer only), `infra_error` (lab: the server or relay never started, so the harness never ran; `passed` is null and the run is left out of scoring and re-run with `runner.py --redo-infra`).
 
 ## Metrics to report
 
@@ -158,6 +158,19 @@ Success rate per harness × model · consistency (tasks passed on all 3 runs) ·
   - **Hermes pin `d0288be5b3`:** confirmed by the user on 2026-09-28.
   - **Still open:** Luna prices, and calibrating the judge.
 - [ ] **4. Dev run:** 10 dev tasks × 2 harnesses × GPT-4.1-mini × 3 runs (60 runs). Check ceiling effect, build failure categories from traces, measure cost.
+  - **dev1 done (2026-09-28), `eval/runs/dev1`:** graph 1/30, Hermes 4/30. A floor effect, not a ceiling. Failures read from the traces:
+    - ending on a plan ("I will now…");
+    - asking the user for things the tools could find;
+    - inventing addresses;
+    - traps taken (tsk_01 truncated notes and doc_05 indices on every run).
+    - No grader false negatives were found.
+  - **Environment fix after dev1:** Gmail search `OR` precedence. Real Gmail reads `a OR b c` as `(a OR b) c` (probed on the dummy account), and the fake had it the other way round. Only dev1 em_06 graph run 2 was affected, and it failed for other reasons too. All 40 tasks were re-validated (`eval/validate.py`: all expectations met). Details: `eval/design/tool_reference.md` §2.1.
+  - **Runner fix after dev1:**
+    - If the server or relay doesn't start, the runner now retries once.
+    - A run that still never reaches the harness is recorded as `failure_category: infra_error` with `passed: null`, and `report.py` leaves it out.
+    - `--redo-infra` re-runs only those runs.
+    - dev1 em_06 Hermes run 1 was re-run this way; it failed like the other two.
+  - **Graph change after dev1, at the user's request:** the supervisor reviews a worker's plain-text reply before the user sees it (`harness_notes.md` item 9c). dev1 graph runs used the old routing.
 - [ ] **5. Test run:** freeze everything; 30 test tasks × 2 harnesses × 2 models × 3 runs (360 runs). Verify Luna's reasoning setting on its first run.
 - [ ] **6. Analysis:** metrics above + 2–3 illustrative traces.
 - [ ] **7. Field layer (optional):** 10 tasks on dummy accounts; add observed faults to the fake; test recovery.
