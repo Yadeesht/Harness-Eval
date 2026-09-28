@@ -77,12 +77,36 @@ More than 4 runs need `--yes`. The runner refuses to run Hermes from a checkout 
    - **The crash.** On imp_01, GPT-4.1-mini's supervisor sent two `route_to_agent` calls in one message ("create the filter", "archive the mail"). Each handoff returns a `Command` setting `current_agent`, a single-value channel, so LangGraph raised `InvalidUpdateError` and the run ended with nothing done. It happened on all 3 graph runs.
    - **The fix (in the product code).** The supervisor's model binding sends `parallel_tool_calls=False` (`core/graph.py`), so it hands off one piece at a time. `current_agent` also got a last-value reducer (`core/state.py`), so no double update can crash the graph again. Checked offline with a scripted model (the old code raises, the new code finishes with the worker handling both handoffs), then in a real imp_01 run (no crash; the supervisor's calls carry `parallel_tool_calls: false`).
    - **Adapter.** A graph crash is now recorded as the graph's `error`, keeping whatever state exists, instead of an adapter error.
-9c. **Graph: the supervisor now reviews a worker's plain-text reply (2026-09-28, after dev1, at the user's request).**
-   - **Before.** A worker reply without a tool call ended the turn and went straight to the user (`internal_agent_route` → END); the supervisor never saw it. In dev1, GPT-4.1-mini workers often ended on a plan ("I will now book…", "Next, I will…"), and that plan became the final answer (cal_02, sh_03, x_01).
-   - **The change (product code).** Such a reply is handed to the supervisor as `[<agent> to supervisor] Reply without work_completion (not yet shown to SIR): …` (`core/agent.py`), and the route goes to the supervisor (`core/state.py`). A new "Worker reply rule" in the supervisor prompt (`config/prompts.py`) says: send the worker back if it only described next steps or parts are undone; pass on a question for SIR; otherwise reply with the result. The step limit bounds any back-and-forth. Error replies (`[ERROR] …`) still end the turn.
-   - **Side effect in the product.** After a worker asks a question, the next user message now starts at the supervisor (which re-routes with the answer), not in that worker.
-   - **Checks.** Offline with scripted models (a plan is sent back and the work then happens once; a genuine question still reaches the user). Two real GPT-4.1-mini runs (`eval/runs/debug_review`): on sh_03 the supervisor sent the data agent back twice, the agent kept planning, and after three rounds the supervisor asked for permission; on cal_02 the worker asked an unnecessary question, which the supervisor passed on. Both still FAIL.
-   - **For the write-up.** This is a harness change made on dev tasks after dev1 results were seen. dev1 graph runs used the old routing.
+9c. **Graph changes after dev1 (2026-09-28, dev tasks only, at the user's request). dev1 graph runs used the earlier version.**
+   - **Supervisor review of worker replies: tried, then reverted by the user.**
+     - For a while, a worker's plain-text reply went to the supervisor instead of the user.
+     - The user removed it: the supervisor got the question without the worker's context. Workers now talk to the user directly again, and a plain-text reply ends the turn (`internal_agent_route` → END).
+     - Two runs with it (`eval/runs/debug_review`) both failed.
+   - **Prompt changes (`config/prompts.py`).** Two are by the user, the rest by the agent at the user's request.
+     - *By the user:*
+       - a supervisor "Complete Handoff Rule": handoffs must carry the actual data from earlier workers;
+       - a "Worker reply rule" for chaining workers;
+       - fuller `work_completion` summaries.
+     - *Supervisor:*
+       - a multi-app rule: split the request by app and route one worker at a time until every part is done;
+       - keep the user's wording and constraints, and add no assumptions of its own;
+       - delegate workspace requests instead of asking the user, because the supervisor can't see the workspace.
+     - *Workers:*
+       - a work rule: carry out every step with tool calls, don't stop on a plan, and don't ask permission for what was requested;
+       - a look-up-first rule: find details with the tools before asking, and check whether more than one item matches before changing something named loosely;
+       - hand back with the remaining part when another app is needed.
+     - *Planning worker:* a "Calendar access" note: shared colleague calendars are visible through `list_calendars` and `get_events`.
+     - The old lines "if critical details are missing, ask the user" were replaced.
+   - **Why.** In dev1, the graph's own losses came from:
+     - cross-app tasks that never reached the other apps' workers (em_06, x_01, x_02);
+     - reflex questions from the supervisor (amb_02) and from workers (imp_01, cal_02);
+     - ending on a plan.
+   - **Debug runs (GPT-4.1-mini, 1 each)** in `eval/runs/debug_prompts` and `debug_prompts2`:
+     - **cal_02:** first run booked Mon 16:00 (the trap); the rerun passed (Tue 13 Oct 16:00).
+     - **x_01:** the Gmail → Sheets → Gmail chain worked and the sheet was right; failed because the emails lack the dates.
+     - **em_06:** it guessed the direct reports without reading the Team Directory sheet.
+     - **amb_02:** changed from a vague question to a guess. The keyword search "Sam" matches whole words only, so it found only the Brightline sync and moved it.
+   - **Shared tool descriptions also changed** (both harnesses see them): `list_calendars` and `get_events.calendar_id`. See `tool_reference.md` §3.
 10. **How the harnesses use the Responses API (Luna).**
     - Hermes sends `store: false`, `reasoning.summary: "auto"`, parallel tool calls and `tool_choice: auto`, streams, and passes Luna's encrypted reasoning back on every turn.
     - The graph (LangChain defaults) sends only `reasoning.effort`, doesn't stream, and keeps reasoning items inside the message content that the product code passes along.

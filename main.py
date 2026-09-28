@@ -52,6 +52,47 @@ AGENT_MESSAGE_KEY = {
 }
 
 
+def next_thread_id(current_id: str) -> str:
+    """Increment thread ID: '7' -> '8', 'thread_1' -> 'thread_2', etc."""
+    current_id = str(current_id).strip()
+    if current_id.isdigit():
+        return str(int(current_id) + 1)
+    import re
+
+    match = re.search(r"(\d+)$", current_id)
+    if match:
+        num = int(match.group(1)) + 1
+        prefix = current_id[: match.start(1)]
+        return f"{prefix}{num}"
+    return f"{current_id}_2"
+
+
+def update_env_thread_id(new_thread_id: str):
+    """Persist the new DEFAULT_THREAD_ID to .env file."""
+    try:
+        import dotenv
+        from config.settings import BASE_DIR
+
+        env_path = BASE_DIR / ".env"
+        if env_path.exists():
+            dotenv.set_key(
+                env_path, "DEFAULT_THREAD_ID", str(new_thread_id), quote_mode="never"
+            )
+    except Exception as e:
+        logger.warning(f"Could not persist DEFAULT_THREAD_ID to .env: {e}")
+
+
+def reload_prompts_and_graph(tool_sets, checkpointer):
+    """Hot-reload prompt definitions and rebuild graph in memory."""
+    import importlib
+
+    prompts_mod = importlib.import_module("config.prompts")
+    graph_mod = importlib.import_module("core.graph")
+    importlib.reload(prompts_mod)
+    importlib.reload(graph_mod)
+    return graph_mod.build_graph(tool_sets, checkpointer)
+
+
 def keyword_listener(
     queue: asyncio.Queue,
     loop: asyncio.AbstractEventLoop,
@@ -118,9 +159,10 @@ async def main():
             checkpointer = AsyncSqliteSaver(connection)
             graph = build_graph(tool_sets, checkpointer)
 
-            config = {
+            current_thread_id = str(DEFAULT_THREAD_ID)
+            run_config = {
                 "configurable": {
-                    "thread_id": DEFAULT_THREAD_ID,
+                    "thread_id": current_thread_id,
                 }
             }
 
@@ -136,7 +178,10 @@ async def main():
                 daemon=True,
             ).start()
 
-            console.print("[dim]Type your message below. Type 'exit' to quit or 'clear' to reset screen.[/dim]")
+            console.print(
+                f"[dim]Active Thread: [bold cyan]{current_thread_id}[/bold cyan] • "
+                f"Commands: [bold cyan]/new[/bold cyan] (fresh chat), [bold cyan]/reload[/bold cyan] (update prompts), [bold cyan]/clear[/bold cyan], [bold cyan]/exit[/bold cyan][/dim]"
+            )
             turn_ready.set()
 
             state = {"messages": []}
@@ -145,19 +190,83 @@ async def main():
                 _, query = await event_queue.get()
 
                 agent_state["last_interaction"] = time.time()
+                query_clean = query.strip()
+                cmd_parts = query_clean.split(maxsplit=1)
+                cmd = cmd_parts[0].lower() if cmd_parts else ""
+                cmd_arg = cmd_parts[1].strip() if len(cmd_parts) > 1 else ""
 
-                if query.lower() in ["exit", "quit", "bye", "/exit", "/quit"]:
+                if cmd in ["exit", "quit", "bye", "/exit", "/quit"]:
                     console.print("\n[dim]👋 Goodbye![/dim]\n")
                     break
 
-                if query.lower() in ["clear", "/clear", "cls"]:
+                if cmd in ["clear", "/clear", "cls"]:
                     console.clear()
                     console.rule("[bold #D97757]Personal Assistant Agent[/]")
                     turn_ready.set()
                     continue
 
+                if cmd in ["/new", "/reset", "new", "reset"]:
+                    current_thread_id = next_thread_id(current_thread_id)
+                    run_config["configurable"]["thread_id"] = current_thread_id
+                    update_env_thread_id(current_thread_id)
+
+                    # Hot-reload prompt definitions and rebuild graph
+                    graph = reload_prompts_and_graph(tool_sets, checkpointer)
+
+                    state = {"messages": []}
+                    console.clear()
+                    console.rule("[bold #D97757]Personal Assistant Agent[/]")
+                    console.print(
+                        f"[bold green]✨ Started fresh chat session![/bold green] "
+                        f"[dim](Thread: [bold cyan]{current_thread_id}[/bold cyan] saved to .env • Prompts reloaded)[/dim]\n"
+                    )
+                    turn_ready.set()
+                    continue
+
+                if cmd in ["/reload", "reload"]:
+                    graph = reload_prompts_and_graph(tool_sets, checkpointer)
+
+                    console.print(
+                        f"[bold green]🔄 Prompts reloaded successfully![/bold green] "
+                        f"[dim](Graph rebuilt in thread: [bold cyan]{current_thread_id}[/bold cyan])[/dim]\n"
+                    )
+                    turn_ready.set()
+                    continue
+
+                if cmd in ["/thread", "thread"]:
+                    if cmd_arg:
+                        current_thread_id = cmd_arg
+                        run_config["configurable"]["thread_id"] = current_thread_id
+                        update_env_thread_id(current_thread_id)
+                        state = {"messages": []}
+                        console.print(
+                            f"[bold green]Switched to thread:[/bold green] [bold cyan]{current_thread_id}[/bold cyan] [dim](saved to .env)[/dim]\n"
+                        )
+                    else:
+                        console.print(
+                            f"[dim]Current active thread:[/dim] [bold cyan]{current_thread_id}[/bold cyan]\n"
+                        )
+                    turn_ready.set()
+                    continue
+
+                if cmd in ["/help", "help"]:
+                    console.print(
+                        Panel(
+                            "[bold cyan]/new[/bold cyan] or [bold cyan]/reset[/bold cyan]   — Start a fresh chat (increments thread ID & hot-reloads prompts)\n"
+                            "[bold cyan]/reload[/bold cyan]          — Reload prompts & rebuild graph in the current chat without restarting\n"
+                            "[bold cyan]/clear[/bold cyan]           — Clear the screen\n"
+                            "[bold cyan]/thread [id][/bold cyan]     — Show active thread ID or switch to a specific thread\n"
+                            "[bold cyan]/exit[/bold cyan]            — Quit session",
+                            title="[bold #D97757]Available Commands[/bold #D97757]",
+                            border_style="#D97757",
+                            padding=(0, 2),
+                        )
+                    )
+                    turn_ready.set()
+                    continue
+
                 request_counter.start_turn(query)
-                snapshot = await graph.aget_state(config)
+                snapshot = await graph.aget_state(run_config)
                 current_agent = "supervisor"
                 if snapshot and snapshot.values:
                     current_agent = snapshot.values.get("current_agent", "supervisor")
@@ -173,7 +282,7 @@ async def main():
                 }
 
                 with console.status("[bold #D97757]Thinking...[/]", spinner="dots"):
-                    state = await graph.ainvoke(new_input, config=config)
+                    state = await graph.ainvoke(new_input, config=run_config)
                 request_counter.end_turn()
 
                 active_agent = state.get("current_agent", current_agent)

@@ -292,7 +292,11 @@ def _correct_time_format_for_api(
 @planning_server.tool()
 async def list_calendars() -> str:
     """
-    List all calendars accessible to the user.
+    List all calendars in the user's calendar list: their own primary calendar plus calendars
+    others have shared with them or that they have added (e.g. colleagues', team or holiday
+    calendars). Each entry gives the calendar ID to pass to `get_events`; `accessRole` shows the
+    access level ('owner' = the user's own, 'reader' = can see another calendar's events).
+    Use this to find a colleague's calendar before checking their availability.
 
     Returns:
         string with list of calendars and their details
@@ -356,7 +360,7 @@ async def get_events(
     You can also search for events by keyword by supplying the optional "query" param.
 
     Args:
-        calendar_id (str): The ID of the calendar to query. Use 'primary' for the user's primary calendar. Defaults to 'primary'. Calendar IDs can be obtained using `list_calendars`.
+        calendar_id (str): The ID of the calendar to query. Use 'primary' for the user's own calendar. To check another person's schedule, pass their calendar ID from `list_calendars` (for a person this is usually their email address). Only calendars shared with the user can be read; others return an error. Defaults to 'primary'.
         event_id (Optional[str]): The ID of a specific event to retrieve. If provided, retrieves only this event and ignores time filtering parameters.
         time_min (Optional[str]): The start of the time range (inclusive) in RFC3339 format (e.g., '2025-05-12' or '2025-05-12'). If omitted, defaults to the current time. Ignored if event_id is provided.
         time_max (Optional[str]): The end of the time range (exclusive) in RFC3339 format. If omitted, events starting from `time_min` onwards are considered (up to `max_results`). Ignored if event_id is provided.

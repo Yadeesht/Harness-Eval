@@ -214,7 +214,7 @@ class FilterIdRequest(BaseModel):
 class SearchEmailsRequest(BaseModel):
     """Search emails request"""
 
-    query: str = Field(..., min_length=1, description="Gmail search query")
+    query: str = Field(default="in:inbox", description="Gmail search query")
     max_results: Optional[int] = Field(None, ge=1, le=500, description="Max results")
 
 

@@ -170,7 +170,15 @@ Success rate per harness × model · consistency (tasks passed on all 3 runs) ·
     - A run that still never reaches the harness is recorded as `failure_category: infra_error` with `passed: null`, and `report.py` leaves it out.
     - `--redo-infra` re-runs only those runs.
     - dev1 em_06 Hermes run 1 was re-run this way; it failed like the other two.
-  - **Graph change after dev1, at the user's request:** the supervisor reviews a worker's plain-text reply before the user sees it (`harness_notes.md` item 9c). dev1 graph runs used the old routing.
+  - **Graph changes after dev1, at the user's request (`harness_notes.md` item 9c):**
+    - Prompt rules for multi-app routing, looking things up before asking, and finishing the work.
+    - A shared-calendar note for the planning worker.
+    - The supervisor review of worker replies was tried and then reverted by the user.
+    - dev1 graph runs used the earlier version, so a new graph dev run is needed for a comparable number.
+  - **Shared tool changes after dev1 (both harnesses):**
+    - `list_calendars` / `get_events` descriptions now mention shared colleague calendars.
+    - `search_emails` has a default query of `in:inbox` (user's change).
+    - All 40 tasks were re-validated: all expectations met.
 - [ ] **5. Test run:** freeze everything; 30 test tasks × 2 harnesses × 2 models × 3 runs (360 runs). Verify Luna's reasoning setting on its first run.
 - [ ] **6. Analysis:** metrics above + 2–3 illustrative traces.
 - [ ] **7. Field layer (optional):** 10 tasks on dummy accounts; add observed faults to the fake; test recovery.

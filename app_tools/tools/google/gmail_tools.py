@@ -838,11 +838,11 @@ async def delete_filter_tool(filter_id: str) -> dict[str, Any]:
 
 
 @communication_server.tool()
-async def search_emails(query: str, max_results: int | None = None) -> dict[str, Any]:
+async def search_emails(query: str = "in:inbox", max_results: int | None = None) -> dict[str, Any]:
     """Search emails using Gmail's query syntax.
 
     Args:
-        query: Gmail search query (supports from:, subject:, after:, has:attachment, etc.)
+        query: Gmail search query (supports from:, subject:, after:, has:attachment, etc.). Defaults to 'in:inbox'.
         max_results: Maximum number of results to return (optional)
 
     Returns:
@@ -855,6 +855,9 @@ async def search_emails(query: str, max_results: int | None = None) -> dict[str,
 
     See: https://support.google.com/mail/answer/7190
     """
+    if not query or not query.strip():
+        query = "in:inbox"
+
     try:
         request = SearchEmailsRequest(query=query, max_results=max_results)
     except Exception as e:

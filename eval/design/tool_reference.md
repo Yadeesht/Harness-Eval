@@ -90,7 +90,7 @@ The first probe found 17 tools broken or misreporting. All were fixed in `app_to
 | `label:Parent/Child`, `label:parent-child`, `label:"Parent/Child"` | match |
 | `label:Label_3` (label **ID**) | **no match** (use `search_by_label` for IDs) |
 | no hits | `{"count": 0, "emails": [], "error": null}` |
-| empty query | validation error ("String should have at least 1 character") |
+| empty query | validation error ("String should have at least 1 character") on the probe; since 2026-09-28 the tool defaults to `in:inbox` instead (see §3 notes) |
 
 ### 2.2 Reading
 
@@ -175,6 +175,12 @@ Detailed listing adds per event:
   - Nothing to change: `"No fields provided to modify the event."`
 - **`delete_event`** → `"Successfully deleted event (ID: <id>) from calendar 'primary'."` (~1 s: it reads the event first). An unknown ID (also for `modify_event`): `"Event not found during verification. The event with ID '<id>' could not be found..."`
 - `list_calendars` → `{"status", "count", "calendars": [{"id", "summary", "description", "timeZone", "accessRole", "primary"}]}`. The dummy account has its primary calendar plus two read-only "Holidays in India" calendars.
+- **Description changes (2026-09-28, after dev1; both harnesses see them).**
+  - Changed: the docstrings of `list_calendars` and of `get_events`' `calendar_id`. They now say the list includes calendars colleagues have shared, what `accessRole` means, that a person's calendar ID is usually their email address, and that unshared calendars return an error.
+  - Unchanged: tool behaviour.
+  - Why: the old text ("calendars accessible to the user") didn't tell the model it could check colleagues' availability.
+  - The fake world assumes a Workspace company where colleagues share calendars (`world.md`); the dummy account has no shared calendars.
+- **`search_emails` default (user's change, same day):** `query` now defaults to `in:inbox`, and an empty query is treated the same way. Before, an empty query was a validation error.
 
 ---
 

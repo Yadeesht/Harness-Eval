@@ -100,20 +100,6 @@ AGENT_MESSAGE_KEY = {
 }
 
 
-def _visible_text(content) -> str:
-    """The text of a message's content (the Responses API gives a list of blocks,
-    including reasoning items that aren't text)."""
-    if isinstance(content, str):
-        return content
-    parts = []
-    for block in content or []:
-        if isinstance(block, str):
-            parts.append(block)
-        elif isinstance(block, dict) and block.get("type") in ("text", "output_text"):
-            parts.append(block.get("text", ""))
-    return "".join(parts)
-
-
 def _resolve_agent_messages(state: State, agent_name: str):
     message_key = AGENT_MESSAGE_KEY.get(agent_name, "messages")
     return state.get(message_key, []) or state.get("messages", [])
