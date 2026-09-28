@@ -11,7 +11,8 @@ This is an evaluation project, not a feature project. The deliverable is a trust
 ## Experimental design
 
 - **Harnesses (the variable):** (1) my LangGraph routed/supervisor graph, (2) Hermes Agent (NousResearch), pinned to one commit.
-- **Models:** GPT-4.1-mini (old cheap model) and GPT-5.6 Luna (current-generation cheap model). Framing is "old cheap vs current generation", NOT "cheap vs frontier". Never label Luna as frontier.
+- **Models:** GPT-4.1-mini (old cheap model) and GPT-6 Luna (current-generation cheap model; Azure deployment `gpt-6-luna`, snapshot `gpt-6-luna-2026-09-22`). Framing is "old cheap vs current generation", NOT "cheap vs frontier". Never label Luna as frontier.
+- **Luna uses the Responses API** (decided 2026-09-28). Azure rejects function tools together with a reasoning effort on `/chat/completions` for this model, so both harnesses call `/v1/responses` for Luna at reasoning effort `medium`. GPT-4.1-mini stays on chat completions.
 - **Tasks:** 40 workspace tasks (email, calendar, Google Tasks, docs, sheets, cross-app), each medium, hard or extreme. No easy tasks. 10 **dev**, 30 **test**.
 - **Runs:** 3 runs per task per harness per model.
 - **Single turn:** each run is one prompt against one fresh seed. There is no follow-up message and no scripted user reply; the agent's final message is its answer.
@@ -135,15 +136,22 @@ Success rate per harness × model · consistency (tasks passed on all 3 runs) ·
 - Tools are exposed as `mcp__workspace__<tool>`; with tool search on, the model initially sees only `tool_search`, `tool_describe`, `tool_call`.
 - **Circuit breaker:** after 3 consecutive tool errors Hermes tells the model the server is unreachable (60s cooldown). Matters for fault injection; document how each harness handles it.
 - Spike result: all isolation checks passed. **Nothing from the spike is reused:** its server, seed, task and scripts in `temp/` are reference only. Everything is built from scratch.
-- **Commit not yet recorded:** the checkout at `eval/hermes-agent` is `d0288be5b3` (v0.21.4 canary, 2026-09-26, with a local `pyproject.toml` edit), and the spike did not record which commit it ran. Confirm the pin and write it into the shared config before Phase 4.
+- **Commit pinned in `eval/harness/config.json`:** the checkout at `eval/hermes-agent` is `d0288be5b3` (v0.21.4 canary, 2026-09-26). Its local `pyproject.toml` edit relaxes the Python-version markers so the dependencies install on 3.13. The spike did not record which commit it ran. The runner refuses any other checkout. Still to confirm before Phase 4.
 - `run_conversation(user_message, conversation_history=...)` is the entry point at this commit.
+- **Azure reasoning:** Hermes' `azure-foundry` provider profile never sends `reasoning_config`. Reasoning effort therefore has to go through `request_overrides`, and the relay's wire audit checks that it arrives.
 
 ## Phases and status
 
 - [x] **Spike:** Hermes runs isolated and fair against a fake server
 - [x] **1. Environment (from scratch):** realistic search, real tool schemas copied, shared seed. *Done when a golden path passes on the new server.* Done 2026-09-27: `eval/lab` (fake Google API under the real tools), `eval/seed` (seed + checks), `eval/validate.py`; cal_02 golden PASS / do-nothing FAIL / negative FAIL.
 - [x] **2. Validate 40 tasks:** golden path PASS + do-nothing FAIL for every task, + negative path FAIL for every task with a trap. *Fix or drop failures.* Done 2026-09-28: `eval/tasks` (40 files), `eval/golden` (golden + negative per task), `eval/grade/grader.py` checks; `eval/validate.py` 120/120 expectations met, `eval/task_report.py` format/apps/split OK. Judge rubrics are in the amb/imp task files; the judge itself and its calibration (~20 hand labels) come with the first real runs.
-- [ ] **3. Adapters:** both harnesses behind one interface and one config; graph memory disabled. *Done when both produce identical-format records on one dev task.*
+- [x] **3. Adapters:** both harnesses behind one interface and one config; graph memory disabled. *Done when both produce identical-format records on one dev task.* Done 2026-09-28.
+  - **Code:** `eval/harness/` (shared config, LLM relay, graph and Hermes adapters, runner with wire audit and `--rebuild`).
+  - **Check:** cal_02 × both harnesses × GPT-4.1-mini × 1 run gave identical-format records, a clean audit, and relay token counts equal to each harness's own.
+  - **Decisions and harness differences:** `eval/design/harness_notes.md`.
+  - **Luna smoke runs (2026-09-28):** both harnesses run GPT-6 Luna on the Responses API with reasoning effort `medium` reaching the wire, the relay's token counts equal each harness's own, and all 4 Phase 3 records (2 harnesses × 2 models) have the same format.
+  - **Graph change (2026-09-28, before any dev run):** at the user's request, the 10k-token worker and 30k-token supervisor history trims were removed from `core/agent.py`. Within a task, the worker trim had emptied the context once tool results passed 10k tokens. The between-turn summarizer is unchanged. Details: `eval/design/harness_notes.md`, item 9.
+  - **Still open:** Luna prices, the LLM judge, and confirming the Hermes pin.
 - [ ] **4. Dev run:** 10 dev tasks × 2 harnesses × GPT-4.1-mini × 3 runs (60 runs). Check ceiling effect, build failure categories from traces, measure cost.
 - [ ] **5. Test run:** freeze everything; 30 test tasks × 2 harnesses × 2 models × 3 runs (360 runs). Verify Luna's reasoning setting on its first run.
 - [ ] **6. Analysis:** metrics above + 2–3 illustrative traces.
