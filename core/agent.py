@@ -6,7 +6,6 @@ from langchain_core.messages import (
     RemoveMessage,
     SystemMessage,
     ToolMessage,
-    trim_messages,
 )
 
 from config.prompts import HISTORY_SUMMARIZE_PROMPT
@@ -126,14 +125,9 @@ def supervisor_node_factory(
         scoped_messages = _resolve_agent_messages(state, agent_name)
         logger.info(f"📨 Messages in supervisor context: {len(scoped_messages)}")
 
-        last_messages = trim_messages(
-            scoped_messages,
-            max_tokens=30000,
-            strategy="last",
-            token_counter=count_tokens,
-            include_system=True,
-            start_on="human",
-        )
+        # No token cap: the supervisor sees its whole history. Long threads are condensed
+        # between turns by the summarizer (route_start), not trimmed here.
+        last_messages = list(scoped_messages)
 
         logger.info("=" * 80)
         if last_messages:  # this is for logs purpose only
@@ -255,15 +249,10 @@ def agent_node_factory(llm_with_tools, system_prompt, agent_name: str):
         logger.info(f"🔄 {current_agent_name.upper()} REQUEST #{request_num}")
         logger.info("=" * 80)
 
+        # No token cap: a worker sees its whole task history (a token cap starting on the
+        # handoff message emptied the context once tool results passed the cap).
         scoped_messages = _resolve_agent_messages(state, current_agent_name)
-        last_messages = trim_messages(
-            scoped_messages,
-            max_tokens=10000,
-            strategy="last",
-            token_counter=count_tokens,
-            include_system=True,
-            start_on="human",
-        )
+        last_messages = list(scoped_messages)
 
         logger.info(f"📨 Messages in conversation: {len(last_messages)}")
 
