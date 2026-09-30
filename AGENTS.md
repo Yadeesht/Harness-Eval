@@ -179,6 +179,15 @@ Success rate per harness × model · consistency (tasks passed on all 3 runs) ·
     - `list_calendars` / `get_events` descriptions now mention shared colleague calendars.
     - `search_emails` has a default query of `in:inbox` (user's change).
     - All 40 tasks were re-validated: all expectations met.
+  - **dev2 on amb_02 and imp_01 (2026-09-29):**
+    - The graph's prompts made it force impossible steps (unrelated filter deleted, external emails, false claims).
+    - Fixed with an "Act, report or ask" rule and clearer send/draft/filter tool descriptions.
+    - amb_02 depended on world knowledge ("Sam" = Samantha), so the seed now says it in the HR sync event.
+    - Seed rebuilt: 25/25 checks hold, and all 40 tasks re-validated. Details: `harness_notes.md` 9c.
+  - **Verbatim handoff (2026-09-29):**
+    - Workers now get the user's exact request, an optional data-only `context`, and a fixed "do your part, then report" instruction. The supervisor no longer paraphrases.
+    - A multiple-match rule was added to every worker prompt.
+    - One amb_02 graph run passed. Details: `harness_notes.md` 9c.
 - [ ] **5. Test run:** freeze everything; 30 test tasks × 2 harnesses × 2 models × 3 runs (360 runs). Verify Luna's reasoning setting on its first run.
 - [ ] **6. Analysis:** metrics above + 2–3 illustrative traces.
 - [ ] **7. Field layer (optional):** 10 tasks on dummy accounts; add observed faults to the fake; test recovery.

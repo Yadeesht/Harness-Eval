@@ -107,6 +107,31 @@ More than 4 runs need `--yes`. The runner refuses to run Hermes from a checkout 
      - **em_06:** it guessed the direct reports without reading the Team Directory sheet.
      - **amb_02:** changed from a vague question to a guess. The keyword search "Sam" matches whole words only, so it found only the Brightline sync and moved it.
    - **Shared tool descriptions also changed** (both harnesses see them): `list_calendars` and `get_events.calendar_id`. See `tool_reference.md` §3.
+   - **dev2 check (2 tasks, 2026-09-29) and correction.**
+     - *What happened:* the "carry out every step, never ask" rule made the graph force imp_01's impossible step. It deleted an unrelated filter, emailed `noreply@jira…` and `gmail-support@google.com`, left drafts, and falsely said the filter was set up. On amb_02 it moved the only "Sam" meeting it could find.
+     - *Prompt fix:* the rule is now "Act, report or ask":
+       - act when the tools can do it;
+       - report a step the tools can't do, without substituting other actions;
+       - ask only when the answer isn't in the workspace or several real options match;
+       - send, draft, delete or change only what was asked, and never claim what no tool did.
+     - *Tool descriptions (both harnesses):*
+       - `send_email`: delivered immediately; only when asked.
+       - `create_draft`: not for notes to the user.
+       - `list_filters`: filters can be listed, read and deleted, not created or edited.
+       - `delete_filter_tool`: permanent; only when asked. Also fixed its wrong reference to `list_filters_tool`.
+       - `get_events.query`: whole words, including attendee addresses.
+     - *amb_02 seed fix:* see the task's notes and `tool_reference.md`.
+   - **Verbatim handoff (2026-09-29, after dev2t, at the user's request).**
+     - *Why:* in dev2t the supervisor kept paraphrasing the request and adding its own defaults ("keep the time the same") despite a prompt rule against it.
+     - *Change:* `route_to_agent` now builds the worker's first message itself (`core/agent.py`, `WORKER_HANDOFF_TEMPLATE`):
+       - the user's latest message, word for word;
+       - an optional `context` block, holding only data from earlier steps (the parameter used to be `message`);
+       - a fixed instruction: do your part, then call `work_completion`.
+     - The supervisor no longer writes instructions to workers; its prompt is updated to match.
+     - *Workers:* a "Multiple-match rule (important)" near the top of every worker prompt says that when more than one item matches and a wrong pick could change, delete or send the wrong thing, change nothing and ask, naming every match.
+     - *Checks:*
+       - offline scripted test: exact request in both handoffs, context only when given, tool schema `agent` + optional `context`;
+       - one real amb_02 run (`eval/runs/debug_handoff`) passed: the worker found both Sams, changed nothing, and asked which one.
 10. **How the harnesses use the Responses API (Luna).**
     - Hermes sends `store: false`, `reasoning.summary: "auto"`, parallel tool calls and `tool_choice: auto`, streams, and passes Luna's encrypted reasoning back on every turn.
     - The graph (LangChain defaults) sends only `reasoning.effort`, doesn't stream, and keeps reasoning items inside the message content that the product code passes along.

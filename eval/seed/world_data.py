@@ -311,7 +311,9 @@ EVENTS = [
     ev("meera_canary_8", "2026-10-08", "16:00", "16:30", "Mesh canary check", "meera.pillai"),
     ev("rahul_board_8", "2026-10-08", "16:00", "18:00", "Board prep", "rahul.verma"),
     ev("farah_call_8", "2026-10-08", "16:30", "17:30", "Customer call", "farah.khan"),
-    ev("hr_sync", "2026-10-08", "17:00", "17:30", "HR sync: Ananya onboarding", "samantha.lee", {"yadeesh": A}),
+    # The description makes "Sam" findable for Samantha (amb_02): nothing else in the seed says she goes by Sam.
+    ev("hr_sync", "2026-10-08", "17:00", "17:30", "HR sync: Ananya onboarding", "samantha.lee", {"yadeesh": A},
+       description="Sam (Samantha Lee, HR) will walk us through Ananya's onboarding plan for her first week."),
     # ---- Fri 9 Oct ----
     ev("lunch_priya_9", "2026-10-09", "12:30", "13:00", "Lunch with Priya", "priya.raman", {"yadeesh": A}),
     ev("hiring_sync_9", "2026-10-09", "13:30", "14:30", "Hiring sync", "samantha.lee", {"yadeesh": A, "rahul.verma": A}),

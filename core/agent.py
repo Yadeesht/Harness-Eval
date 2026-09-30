@@ -419,11 +419,30 @@ async def summerizer_node(state: State):
     return updates
 
 
+# What a worker starts with: the user's own words, never a paraphrase, plus a fixed instruction.
+WORKER_HANDOFF_TEMPLATE = (
+    "[Handoff from supervisor]\n"
+    "User request (the user's exact words):\n{request}\n"
+    "{context}"
+    "\nDo the part of this request that your tools cover. When you are done, call "
+    "`work_completion` with the result; if part of the request needs another app, say what is left."
+)
+
+
+def _latest_user_request(state: dict) -> str:
+    """The user's latest message, verbatim (user messages are the unnamed HumanMessages)."""
+    for m in reversed(state.get("messages", [])):
+        if isinstance(m, HumanMessage) and not m.name:
+            return m.content if isinstance(m.content, str) else str(m.content)
+    return ""
+
+
 @tool
 def route_to_agent(
+    state: Annotated[dict, InjectedState],
     tool_call_id: Annotated[str, InjectedToolCallId],
     agent: str,
-    message: str,
+    context: str = "",
 ) -> Command:
     """
     Route the conversation to the correct specialized agent.
@@ -437,16 +456,21 @@ def route_to_agent(
     - document_agent: Google Docs, document creation, document lookup.
     - data_agent: Google Sheets, spreadsheets, tables.
 
-    message: The seed context the worker agent will start with. Describe clearly
-      what the user is asking and provide any relevant parameters already extracted.
+    The worker automatically receives the user's latest message word for word.
+
+    context: Optional. Only facts the worker cannot find itself: results from earlier
+      workers (names, addresses, dates, IDs, text) or what the user said in earlier turns.
+      Leave it empty on a first handoff. Never rephrase the request or add instructions.
     """
     supervisor_closure = ToolMessage(
         content=f"Successfully routed user to {agent}.",
         tool_call_id=tool_call_id,
     )
 
+    context_block = f"\nContext from earlier steps:\n{context.strip()}\n" if context and context.strip() else ""
     worker_seed = HumanMessage(
-        content=f"[Supervisor Handoff]: {message}", name="supervisor"
+        content=WORKER_HANDOFF_TEMPLATE.format(request=_latest_user_request(state), context=context_block),
+        name="supervisor",
     )
 
     agent_key_map = {

@@ -365,7 +365,7 @@ async def get_events(
         time_min (Optional[str]): The start of the time range (inclusive) in RFC3339 format (e.g., '2025-05-12' or '2025-05-12'). If omitted, defaults to the current time. Ignored if event_id is provided.
         time_max (Optional[str]): The end of the time range (exclusive) in RFC3339 format. If omitted, events starting from `time_min` onwards are considered (up to `max_results`). Ignored if event_id is provided.
         max_results (int): The maximum number of events to return. Defaults to 25. Ignored if event_id is provided.
-        query (Optional[str]): A keyword to search for within event fields (summary, description, location). Ignored if event_id is provided.
+        query (Optional[str]): A keyword to search for within event fields (summary, description, location, attendee addresses). It matches whole words only; part of a word does not match. Ignored if event_id is provided.
         detailed (bool): Whether to return detailed event information including description, location, attendees, and attendee details (response status, organizer, optional flags). Defaults to False.
         include_attachments (bool): Whether to include attachment information in detailed event output. When True, shows attachment details (fileId, fileUrl, mimeType, title) for events that have attachments. Only applies when detailed=True. Set this to True when you need to view or access files that have been attached to calendar events, such as meeting documents, presentations, or other shared files. Defaults to False.
 

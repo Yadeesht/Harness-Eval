@@ -86,7 +86,11 @@ async def get_user_email(service) -> str:
 
 @communication_server.tool()
 async def send_email(recipient_id: str, subject: str, message: str) -> dict[str, Any]:
-    """Send an email via Gmail.
+    """Send an email via Gmail. The email is delivered immediately and cannot be recalled.
+
+    Use this only when the user asks for an email to be sent, and only to recipients the user
+    named or that you found in their mailbox or files. Do not use it to leave notes for the user
+    or to ask someone else to do a task for them.
 
     Args:
         recipient_id: Recipient's email address
@@ -418,7 +422,8 @@ async def create_draft(recipient_id: str, subject: str, message: str) -> dict[st
         Dict with 'success' boolean, 'draft_id' if successful or error message
 
     Note:
-        Use this when user wants to draft an email for later review.
+        Use this when the user asks for a draft to review before sending. Do not use drafts as
+        notes or reports to the user; tell the user directly instead.
     """
     try:
         request = DraftRequest(
@@ -751,7 +756,8 @@ async def list_filters() -> dict[str, Any]:
         Dict with 'filters' list or 'error' message
 
     Note:
-        Filters are rules that automatically organize incoming emails.
+        Filters are rules that automatically organize incoming emails. These tools can list,
+        read and delete filters; they cannot create or edit filters.
     """
     try:
         service = get_service()
@@ -803,10 +809,12 @@ async def get_filter(filter_id: str) -> dict[str, Any]:
 
 @communication_server.tool()
 async def delete_filter_tool(filter_id: str) -> dict[str, Any]:
-    """Delete a specific email filter by its ID.
+    """Permanently delete a specific email filter by its ID.
+
+    Use this only when the user asks to remove that filter.
 
     Args:
-        filter_id: The filter ID to delete (from list_filters_tool)
+        filter_id: The filter ID to delete (from list_filters)
 
     Returns:
         Dict with 'success' boolean or 'error' message

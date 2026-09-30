@@ -180,6 +180,13 @@ Detailed listing adds per event:
   - Unchanged: tool behaviour.
   - Why: the old text ("calendars accessible to the user") didn't tell the model it could check colleagues' availability.
   - The fake world assumes a Workspace company where colleagues share calendars (`world.md`); the dummy account has no shared calendars.
+- **More description changes (2026-09-29, after dev2; both harnesses; behaviour unchanged).**
+  - `send_email`: delivered immediately; use only when asked, only to known recipients, not for notes.
+  - `create_draft`: not for notes to the user.
+  - `list_filters`: these tools can list, read and delete filters, not create or edit them.
+  - `delete_filter_tool`: permanent; only when the user asks. Its reference now says `list_filters`.
+  - `get_events.query`: whole words, including attendee addresses, as observed on the real account.
+- **Seed change (2026-09-29):** the `hr_sync` event now has the description "Sam (Samantha Lee, HR) will walk us through…". Nothing else in the seed said Samantha goes by Sam, so amb_02 depended on world knowledge.
 - **`search_emails` default (user's change, same day):** `query` now defaults to `in:inbox`, and an empty query is treated the same way. Before, an empty query was a validation error.
 
 ---
