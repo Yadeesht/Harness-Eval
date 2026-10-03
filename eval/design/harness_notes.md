@@ -165,7 +165,7 @@ It also refuses to re-run a run that already has a record in `--out` (in `record
      - *F extended (2026-10-04, at the user's request), the last dev tuning before the GPT-4.1-mini dev run:*
        - First name the rows to remove and why; every other row read must be in what is written.
        - After writing, read back and check that the row count equals rows read minus rows removed, and that each written row matches its source.
-       - Not given its own debug round: sh_03 runs again in the GPT-4.1-mini dev run.
+       - Not given its own debug round. GPT-4.1-mini was then dropped (AGENTS.md, Models), and the user chose no final graph dev run. So the version that goes into Phase 5 (commit `56dcd85`) differs from dev6 by E, F, this extension and the corrected example. Only `debug_ef` checked those, and it ran before this extension.
 10. **How the harnesses use the Responses API (Luna).**
     - Hermes sends `store: false`, `reasoning.summary: "auto"`, parallel tool calls and `tool_choice: auto`, streams, and passes Luna's encrypted reasoning back on every turn.
     - The graph (LangChain defaults) sends only `reasoning.effort`, doesn't stream, and keeps reasoning items inside the message content that the product code passes along.

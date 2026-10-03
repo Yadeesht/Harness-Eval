@@ -147,8 +147,11 @@ def llm_metrics(calls: list[dict], model_cfg: dict) -> dict:
     prices = model_cfg.get("prices_usd_per_mtok")
     cost = None
     if prices:
-        cost = ((tokens["prompt"] - tokens["cached"]) * prices["input"] + tokens["cached"] * prices["cached_input"]
-                + tokens["completion"] * prices["output"]) / 1e6
+        # Cached reads and cache writes are both part of the prompt count (Luna: prompt = cached + cache_write + a few);
+        # a model without a cache-write price pays the plain input price for them. Reasoning is part of completion.
+        plain = tokens["prompt"] - tokens["cached"] - tokens["cache_write"]
+        cost = (plain * prices["input"] + tokens["cached"] * prices["cached_input"]
+                + tokens["cache_write"] * prices.get("cache_write", prices["input"]) + tokens["completion"] * prices["output"]) / 1e6
     return {
         "input_tokens": tokens["prompt"],
         "output_tokens": tokens["completion"],

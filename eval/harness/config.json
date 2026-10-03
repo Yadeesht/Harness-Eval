@@ -37,8 +37,8 @@
       "_api_why": "Azure rejects function tools with a reasoning effort on /chat/completions for this model (decided 2026-09-28)",
       "temperature": null,
       "reasoning_effort": "medium",
-      "prices_usd_per_mtok": null,
-      "_todo": "prices still needed"
+      "prices_usd_per_mtok": {"input": 0.10, "cached_input": 0.01, "cache_write": 0.125, "output": 0.50},
+      "_prices_source": "Azure price list for gpt-6-luna, short context (requests up to 272K tokens), given by the user on 2026-10-04. Long context (over 272K) is 0.20 / 0.02 / 0.25 / 0.75. The largest single request in the Luna dev runs was 42K tokens, so the short-context prices apply."
     }
   },
 

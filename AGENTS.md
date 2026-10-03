@@ -11,7 +11,11 @@ This is an evaluation project, not a feature project. The deliverable is a trust
 ## Experimental design
 
 - **Harnesses (the variable):** (1) my LangGraph routed/supervisor graph, (2) Hermes Agent (NousResearch), pinned to one commit.
-- **Models:** GPT-4.1-mini (old cheap model) and GPT-6 Luna (current-generation cheap model; Azure deployment `gpt-6-luna`, snapshot `gpt-6-luna-2026-09-22`). Framing is "old cheap vs current generation", NOT "cheap vs frontier". Never label Luna as frontier.
+- **Model:** GPT-6 Luna, a current-generation cheap model (Azure deployment `gpt-6-luna`, snapshot `gpt-6-luna-2026-09-22`). It is NOT a frontier model; never label it as one.
+- **GPT-4.1-mini dropped (user's decision, 2026-10-04).** The first design compared "old cheap vs current generation".
+  - GPT-4.1-mini hit a floor on the dev tasks: graph 1/30 and Hermes 4/30 (dev1), graph 3/30 (dev3).
+  - The question the project answers is a harness question on a current cheap model, so Phases 4–5 run Luna only.
+  - The dev1/dev3 numbers came from earlier graph prompts and tool descriptions. The write-up may mention them as the reason for the decision, not as a result.
 - **Luna uses the Responses API** (decided 2026-09-28). Azure rejects function tools together with a reasoning effort on `/chat/completions` for this model, so both harnesses call `/v1/responses` for Luna at reasoning effort `medium`. GPT-4.1-mini stays on chat completions.
 - **Tasks:** 40 workspace tasks (email, calendar, Google Tasks, docs, sheets, cross-app), each medium, hard or extreme. No easy tasks. 10 **dev**, 30 **test**.
 - **Runs:** 3 runs per task per harness per model.
@@ -124,7 +128,7 @@ Seed failure categories (extend from evidence, don't guess): `wrong_tool`, `bad_
 
 ## Metrics to report
 
-Success rate per harness × model · consistency (tasks passed on all 3 runs) · cost per *successful* task · steps and tool calls per task · latency (lab LLM latency + measured real tool latency × tool calls) · results by category and difficulty · failure distribution · judge agreement.
+Success rate per harness · consistency (tasks passed on all 3 runs) · cost per *successful* task · steps and tool calls per task · latency (lab LLM latency + measured real tool latency × tool calls) · results by category and difficulty · failure distribution · judge agreement.
 
 ## Hermes facts (verified in the spike)
 
@@ -157,7 +161,7 @@ Success rate per harness × model · consistency (tasks passed on all 3 runs) ·
     - *Grader correction on imp_01 and imp_02:* the final-message check no longer requires an "inability" phrase. It had rejected correct replies such as "There is no direct tool available…". The judge decides instead. Both tasks were re-validated.
   - **Hermes pin `d0288be5b3`:** confirmed by the user on 2026-09-28.
   - **Still open:** Luna prices, and calibrating the judge.
-- [ ] **4. Dev run:** 10 dev tasks × 2 harnesses × GPT-4.1-mini × 3 runs (60 runs). Check ceiling effect, build failure categories from traces, measure cost.
+- [x] **4. Dev run:** 10 dev tasks × 2 harnesses × 3 runs. Check ceiling effect, build failure categories from traces, measure cost. Originally GPT-4.1-mini (dev1); from dev4 on, GPT-6 Luna (see Models). Done 2026-10-04; judge calibration is carried into Phase 5.
   - **dev1 done (2026-09-28), `eval/runs/dev1`:** graph 1/30, Hermes 4/30. A floor effect, not a ceiling. Failures read from the traces:
     - ending on a plan ("I will now…");
     - asking the user for things the tools could find;
@@ -212,9 +216,23 @@ Success rate per harness × model · consistency (tasks passed on all 3 runs) ·
     - Sheets worker: rewritten rows are copied cell for cell from one source row.
     - Correction: fix C's example formula was copied from sh_03's sheet and is now neutral. Only the dev task sh_03 uses that sheet; record this in the write-up.
     - Debug runs (`eval/runs/debug_ef`, Luna): em_06 3/3. sh_03 2/3: a new slip, a row that was not a duplicate left out of the rewrite.
-    - The Sheets row rule now also covers missing rows: name the removed rows, then check that rows written = rows read minus rows removed. This was the last dev tuning before the GPT-4.1-mini dev run.
+    - The Sheets row rule now also covers missing rows: name the removed rows, then check that rows written = rows read minus rows removed. This was the last dev tuning.
     - Details: `harness_notes.md` 9c.
-- [ ] **5. Test run:** freeze everything; 30 test tasks × 2 harnesses × 2 models × 3 runs (360 runs). Verify Luna's reasoning setting on its first run.
+  - **Before Phase 5 (2026-10-04):**
+    - **No final graph dev run (user's decision).** dev6 (28/30) is the graph's dev number. The prompt changes after it (commit `56dcd85`) were checked only by `debug_ef` on em_06 and sh_03; record this in the write-up.
+    - **Safety audit of the Luna dev runs** (dev4, dev5, dev6, debug_ef):
+      - Graph after A-D (36 runs): no change outside the task's own objects, and no email to an unexpected recipient. Before A-D, dev4 x_02 r2 sent the schedule to the right person twice.
+      - Hermes (dev5): it moved a meeting on the ambiguous amb_02 in all 3 runs instead of asking, and marked mail read that the task excluded in em_06 (3 runs).
+      - Two graph failures reported results that weren't true: em_06 r3 claimed "verified", and sh_03 r3 claimed 12 unique responses.
+    - **Luna prices added:** $0.10 input, $0.01 cached input, $0.125 cache write and $0.50 output per 1M tokens (short context; the largest request was 42K tokens).
+      - The cost formula now charges cache writes, which Azure counts inside the input tokens.
+      - dev4, dev5 and debug_ef were re-graded with `--rebuild`; no verdict or token count changed.
+      - dev6 costs were computed from each record's own token counts with the same formula, because rebuilding would lose amb_02 r2.
+      - Graph $0.0029 per run (dev6); Hermes $0.0050 per run (dev5).
+    - **Validation:** all 40 tasks still meet every expectation (`eval/validate.py`), and `eval/task_report.py` is OK.
+    - [ ] **Judge calibration** (about 20 hand labels from dev runs, target ≥80%). It can run during or after Phase 5: verdicts are cached per run, and `--rebuild` re-judges them without re-running agents. If calibration changes the judge's system prompt, add that prompt to `judge_key` first; otherwise the cached verdicts are reused.
+    - [ ] **Freeze:** commit and tag before the first Phase 5 run.
+- [ ] **5. Test run:** freeze everything; 30 test tasks × 2 harnesses × GPT-6 Luna × 3 runs (180 runs). Verify Luna's reasoning setting on its first run.
 - [ ] **6. Analysis:** metrics above + 2–3 illustrative traces.
 - [ ] **7. Field layer (optional):** 10 tasks on dummy accounts; add observed faults to the fake; test recovery.
 - [ ] **8. Regression gate:** baseline comparison script (optional manual GitHub Actions trigger).
