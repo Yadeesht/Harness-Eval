@@ -9,7 +9,9 @@ script). The runner never looks inside a harness: it starts the adapter with the
 arguments for every harness, then grades the server's final state and builds the record from
 the server's tool log, the relay's model-call log and the adapter's output file.
 
-More than 4 runs need --yes (AGENTS.md: ask before any matrix run).
+More than 4 runs need --yes (AGENTS.md: ask before any matrix run). A run that already has a
+record in --out is never re-run silently: that needs --overwrite, which replaces its folder and
+its line in records.jsonl.
 """
 
 from __future__ import annotations
@@ -263,6 +265,25 @@ def run_dir_of(out: Path, task_id: str, harness: str, model: str, run_no: int) -
     return out / task_id / harness / model / f"run{run_no}"
 
 
+def _run_key(record: dict) -> tuple:
+    """Same order as a plan entry: (task, run, model, harness)."""
+    return (record["task_id"], record["run"], record["model"], record["harness"])
+
+
+def recorded_runs(records_path: Path) -> set[tuple]:
+    if not records_path.exists():
+        return set()
+    return {_run_key(json.loads(l)) for l in records_path.read_text(encoding="utf-8").splitlines() if l.strip()}
+
+
+def drop_records(records_path: Path, key: tuple) -> None:
+    """Remove a run's earlier record line before it is re-run (--overwrite), so it is never recorded twice."""
+    if not records_path.exists():
+        return
+    keep = [l for l in records_path.read_text(encoding="utf-8").splitlines() if l.strip() and _run_key(json.loads(l)) != key]
+    records_path.write_text("".join(l + "\n" for l in keep), encoding="utf-8")
+
+
 def _start_services(config: dict, task_id: str, run_dir: Path, env: dict) -> tuple[subprocess.Popen, subprocess.Popen, int, int]:
     """Start the fake MCP server and the LLM relay; retry once on a start failure.
     Nothing has called a model yet, so a retry cannot change the run."""
@@ -439,9 +460,11 @@ def main() -> int:
     parser.add_argument("--rebuild", action="store_true", help="re-grade the existing run folders (no model calls)")
     parser.add_argument("--redo-infra", action="store_true",
                         help="re-run only the runs whose server/relay never started, then re-grade every run into a fresh records.jsonl")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="re-run runs that already finished in --out, replacing their folders and record lines")
     args = parser.parse_args()
-    if args.rebuild and args.redo_infra:
-        parser.error("use either --rebuild or --redo-infra")
+    if sum([args.rebuild, args.redo_infra, args.overwrite]) > 1:
+        parser.error("use only one of --rebuild, --redo-infra and --overwrite")
 
     config = load_config()
     for model in args.models:
@@ -459,6 +482,17 @@ def main() -> int:
         to_execute = {p for p in plan if infra_failure(run_dir_of(out, p[0], p[3], p[2], p[1]))}
         print(f"--redo-infra: {len(to_execute)} run(s) never reached the harness and will be re-run: "
               f"{sorted(f'{t} {h} {m} r{r}' for t, r, m, h in to_execute)}")
+    records_path = out / "records.jsonl"
+    # A finished run has a record (in records.jsonl or its folder). Re-running it would replace its
+    # folder and leave its old line behind, so that needs --overwrite (dev6: amb_02 r1 recorded twice).
+    finished = set()
+    if not (args.rebuild or args.redo_infra):
+        recorded = recorded_runs(records_path)
+        finished = {p for p in to_execute if p in recorded or (run_dir_of(out, p[0], p[3], p[2], p[1]) / "record.json").exists()}
+        if finished and not args.overwrite:
+            print(f"{len(finished)} run(s) already finished in {_rel(out)}: {sorted(f'{t} {h} {m} r{r}' for t, r, m, h in finished)}")
+            print("Leave them out of --tasks, use a new --out folder, or pass --overwrite to re-run them (their folders and record lines are replaced).")
+            return 2
     if len(to_execute) > MAX_RUNS_WITHOUT_YES and not args.yes:
         print(f"More than {MAX_RUNS_WITHOUT_YES} LLM runs: re-run with --yes to confirm.")
         return 2
@@ -470,7 +504,6 @@ def main() -> int:
 
     out.mkdir(parents=True, exist_ok=True)
     index = load_json(SEED_INDEX)
-    records_path = out / "records.jsonl"
     judge_service = Judge(config, out)
     if args.rebuild or args.redo_infra:  # re-grade existing run folders into a fresh records.jsonl
         records_path.unlink(missing_ok=True)
@@ -478,6 +511,8 @@ def main() -> int:
         started = datetime.now()
         run_dir = run_dir_of(out, task_id, harness, model, run_no)
         if (task_id, run_no, model, harness) in to_execute:
+            if (task_id, run_no, model, harness) in finished:  # --overwrite
+                drop_records(records_path, (task_id, run_no, model, harness))
             run_dir = execute_run(config, task_id, harness, model, run_no, out)
         elif not ((run_dir / "adapter.json").exists() or infra_failure(run_dir)):
             print(f"{task_id} {harness} {model} r{run_no}: no run folder, skipped")

@@ -82,6 +82,9 @@ Email Retrieval & Reading rule:
 - If you need the full body of specific emails, call `read_email(email_id)` using the IDs returned by `search_emails`.
 - If a tool call returns an error, self-correct the parameters and retry immediately; do not give up.
 
+Bulk changes rule:
+When you change several emails, first list the ones you mean from your search results. After a query-based tool such as `batch_archive`, compare the count it reports with that list and change any it missed by ID. Searching again with the same query does not check anything.
+
 Look-up rule:
 Find what you need with your tools: search the mailbox for people's addresses, senders, threads and earlier messages.
 Search results show only a short snippet of each email. Before you decide anything from an email's content, open it with `read_email`.
@@ -228,7 +231,8 @@ Do not change factual meaning.
 Execution rule:
 Use listing or search tools first when IDs are unknown.
 Validate ranges before write operations.
-When you write totals, counts or sums that depend on other cells, write them as formulas (e.g. =COUNTIFS(Responses!D:D,"Yes",Responses!E:E,"Vegetarian")) with value_input_option USER_ENTERED, or recompute them from the final data after your last change. Read them back to check.
+When you write totals, counts or sums that depend on other cells, write them as formulas (e.g. =SUM(C2:C30) or a COUNTIF/COUNTIFS formula) with value_input_option USER_ENTERED, or recompute them from the final data after your last change. Read them back to check.
+When you rewrite rows (e.g. to remove duplicates, sort or clean values), first name the rows you will remove and why; every other row you read must be in what you write. Each row you write must come from one row you read, copied cell for cell; only the cells the request asks you to change may differ (e.g. a normalised value). Never combine cells from different rows. After writing, read the rows back and check: the number of rows equals the rows you read minus the rows you removed, and every written row matches the row it came from.
 """
 
 HISTORY_SUMMARIZE_PROMPT = """You are the Context Compaction Engine for JARVIS.

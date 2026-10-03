@@ -198,6 +198,22 @@ Success rate per harness × model · consistency (tasks passed on all 3 runs) ·
     - cross-app look-ups: an optional `lookup` field on `route_to_agent`, "NEED:" hand-backs, and a supervisor look-up rule.
     - 4 Luna debug runs: em_06, amb_02 and tsk_01 passed; x_02 failed on a model scheduling overlap.
     - The graph needs a fresh dev run for a comparable number. Details: `harness_notes.md` 9c.
+  - **dev6: graph, Luna, after A-D (2026-10-04, commit `767d3cb`):**
+    - 28/30, with 8/10 tasks passing on all 3 runs (dev4 had 20/30; Hermes in dev5 had 18/30). No task got worse.
+    - 68k input tokens per run, up from 55k; Hermes used 180k.
+    - Failures: em_06 r3 (a batch archive by query missed one notification, then was "verified" with the same query) and sh_03 r2 (a rewritten row combined two responses).
+    - Note: the graph has now been tuned on these dev tasks and Hermes has not, so the dev comparison is not the result. The test set is.
+  - **dev6 run folders:** a second command into the same folder re-ran amb_02 r1 and was stopped during r2.
+    - The duplicate amb_02 r1 line was removed; the original file is kept as `records.jsonl.bak`.
+    - amb_02 run2's folder holds only that aborted start, so `--rebuild` of dev6 would skip r2. Its record line is the original.
+  - **Runner guard (after dev6):** a run that already has a record in `--out` is not re-run without `--overwrite`, which replaces its folder and record line. `report.py` warns about duplicate lines.
+  - **After dev6, at the user's request:**
+    - Gmail worker "Bulk changes rule": check a batch tool's count against the emails meant.
+    - Sheets worker: rewritten rows are copied cell for cell from one source row.
+    - Correction: fix C's example formula was copied from sh_03's sheet and is now neutral. Only the dev task sh_03 uses that sheet; record this in the write-up.
+    - Debug runs (`eval/runs/debug_ef`, Luna): em_06 3/3. sh_03 2/3: a new slip, a row that was not a duplicate left out of the rewrite.
+    - The Sheets row rule now also covers missing rows: name the removed rows, then check that rows written = rows read minus rows removed. This was the last dev tuning before the GPT-4.1-mini dev run.
+    - Details: `harness_notes.md` 9c.
 - [ ] **5. Test run:** freeze everything; 30 test tasks × 2 harnesses × 2 models × 3 runs (360 runs). Verify Luna's reasoning setting on its first run.
 - [ ] **6. Analysis:** metrics above + 2–3 illustrative traces.
 - [ ] **7. Field layer (optional):** 10 tasks on dummy accounts; add observed faults to the fake; test recovery.

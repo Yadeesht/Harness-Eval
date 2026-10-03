@@ -20,6 +20,7 @@ Every run gets fresh processes. The runner starts both adapters with identical a
 ```
 
 More than 4 runs need `--yes`. The runner refuses to run Hermes from a checkout other than the pinned commit.
+It also refuses to re-run a run that already has a record in `--out` (in `records.jsonl` or its folder's `record.json`). `--overwrite` re-runs it, replacing its folder and its record line. This was added after dev6: a second command into the same folder re-ran amb_02 r1, which left two record lines and overwrote the folders. `report.py` warns about duplicate lines and counts only the last.
 
 ## Shared settings and how each harness gets them
 
@@ -144,6 +145,27 @@ More than 4 runs need `--yes`. The runner refuses to run Hermes from a checkout 
        - offline scripted test of the em_06 shape (NEED, then a look-up to Sheets, then back with context) and the tool schema (`agent`, optional `context` and `lookup`);
        - 4 Luna debug runs (`eval/runs/debug_ad`). em_06, amb_02 and tsk_01 passed. em_06 and tsk_01 had failed every run in both harnesses: em_06 used the look-up path and read the Team Directory, and tsk_01 opened the cut-off task with `get_task`.
        - x_02 failed on a model overlap mistake: Farah was busy 13:30–14:30 in the result it read, and it booked 14:00. The step order was right: the meetings were booked before a single email went out.
+   - **dev6: graph, Luna, after A-D (2026-10-04, commit `767d3cb`).**
+     - Score: 28/30, with 8/10 tasks passing on all 3 runs. dev4 had 20/30 and Hermes (dev5) 18/30.
+     - Fixed: amb_02 1/3 → 3/3, tsk_01 0/3 → 3/3, em_06 0/3 → 2/3 and x_02 2/3 → 3/3. No task got worse.
+     - Cost: input tokens per run rose from 55k to 68k (look-ups and opening full items). That is still 2.6x fewer than Hermes (180k). Wall time was unchanged at 44 s.
+     - The records say `9be99b4` plus 4 uncommitted files. Those files did not change during the run and were committed unchanged right after it as `767d3cb`.
+     - Two failures, both one-off slips:
+       - *em_06 r3:* `batch_archive` with `{from:no-reply from:notifications}` archived 3 of the 4 notifications. GitHub's sender is `noreply@…`, and the fake reads `no-reply` as the two words "no reply" (real-Gmail behaviour for this case was not probed). The worker then "verified" with the same query.
+       - *sh_03 r2:* no sheet tool deletes rows, so the worker rewrote the tab. For Karthik it combined the old row's timestamp with the new answer, so the latest row was not kept as it was.
+   - **Fixes E-F and an example correction after dev6 (2026-10-04, at the user's request):**
+     - *E. Gmail worker, "Bulk changes rule":* list the emails meant from the search results, compare a query-based tool's count with that list, change any missed ones by ID, and never re-run the same query as a check.
+     - *F. Sheets worker, rewriting rows:* each written row comes from one row read, copied cell for cell, and only the cells the request changes may differ. Never combine rows. Compare the written rows with their sources.
+     - *Correction:* fix C's example formula was copied from sh_03's own sheet (`=COUNTIFS(Responses!D:D,"Yes",Responses!E:E,"Vegetarian")`). It is replaced with a neutral `=SUM(C2:C30) or a COUNTIF/COUNTIFS formula`. Only sh_03 (a dev task) uses that sheet, so no test task is affected, but dev6's sh_03 runs had the hint. Record this in the write-up.
+     - Check: the prompts format, and the offline look-up test still passes.
+     - Debug runs on Luna (`eval/runs/debug_ef`):
+       - em_06 3/3. The archive step matched the emails identified each time: exact sender addresses, a query whose count matched a listed set, or archives by ID.
+       - sh_03 2/3. No row was combined, but r3 left out a row that was not a duplicate (Priya Raman), so the sheet had 12 rows instead of 13 and Vegan read 1 instead of 2. Its read-back showed 12 rows and it did not notice.
+       - Hermes uses the same rewrite approach on sh_03; in dev5 it rewrote rows a second time in 2 of its 3 runs.
+     - *F extended (2026-10-04, at the user's request), the last dev tuning before the GPT-4.1-mini dev run:*
+       - First name the rows to remove and why; every other row read must be in what is written.
+       - After writing, read back and check that the row count equals rows read minus rows removed, and that each written row matches its source.
+       - Not given its own debug round: sh_03 runs again in the GPT-4.1-mini dev run.
 10. **How the harnesses use the Responses API (Luna).**
     - Hermes sends `store: false`, `reasoning.summary: "auto"`, parallel tool calls and `tool_choice: auto`, streams, and passes Luna's encrypted reasoning back on every turn.
     - The graph (LangChain defaults) sends only `reasoning.effort`, doesn't stream, and keeps reasoning items inside the message content that the product code passes along.

@@ -5,6 +5,8 @@
 Undecided runs (judge error) count as not passed and are listed separately. Runs whose server or
 relay never started (failure_category infra_error) are left out and listed. Consistency is
 the number of tasks passed on every run. Cost per success is total cost / passed runs.
+A run recorded twice (the same task, harness, model and run number) is counted once, from its
+last line, with a warning.
 """
 
 from __future__ import annotations
@@ -22,7 +24,14 @@ def mean(xs: list) -> float:
 
 def main() -> int:
     path = Path(sys.argv[1] if len(sys.argv) > 1 else "eval/runs/dev1/records.jsonl")
-    all_recs = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    latest = {}  # one record per run: a later line for the same run replaces the earlier one
+    for r in lines:
+        latest[(r["task_id"], r["harness"], r["model"], r["run"])] = r
+    all_recs = list(latest.values())
+    if len(all_recs) < len(lines):
+        dupes = sorted(k for k, n in Counter((r["task_id"], r["harness"], r["model"], r["run"]) for r in lines).items() if n > 1)
+        print(f"WARNING: {len(lines) - len(all_recs)} duplicate record line(s); counting only the last line for {dupes}\n")
     infra = [r for r in all_recs if r.get("failure_category") == "infra_error"]
     recs = [r for r in all_recs if r.get("failure_category") != "infra_error"]
     if infra:
