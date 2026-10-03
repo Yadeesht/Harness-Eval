@@ -132,6 +132,18 @@ More than 4 runs need `--yes`. The runner refuses to run Hermes from a checkout 
      - *Checks:*
        - offline scripted test: exact request in both handoffs, context only when given, tool schema `agent` + optional `context`;
        - one real amb_02 run (`eval/runs/debug_handoff`) passed: the worker found both Sams, changed nothing, and asked which one.
+   - **Fixes A-D after dev4/dev5 (2026-10-03, at the user's request).** dev4 (graph, Luna) scored 20/30 and dev5 (Hermes, Luna) 18/30. The graph's remaining failures had four causes:
+     - *A. Recurring meetings counted as several matches (amb_02).* The multiple-match rule now says to check every result's title, description and people. Repeats of one recurring event are one meeting (normally the next occurrence).
+     - *B. Decisions made from cut-off previews (tsk_01; Hermes failed too).* Each worker's look-up rule now says to open the full item before deciding from truncated text: `get_task`, `read_email`, a detailed event, a document's content, or every row it relies on.
+     - *C. A stale derived total (sh_03 run 3).* The data agent now writes totals as formulas (`COUNTIFS`, `USER_ENTERED`) or recomputes them after the last change. Checked: the fake computes formulas, and the grader reads the computed values.
+     - *D. Information that lives in another app (em_06; x_02 run 2).* Three parts:
+       - `route_to_agent` has an optional `lookup` field. It builds a separate template, `WORKER_LOOKUP_TEMPLATE`: "find and return only this; do not create, change, send or delete anything".
+       - Workers hand back with "NEED: …" instead of guessing or asking the user. A NEED is only for missing information; actions no tool can do are still reported.
+       - The supervisor's "Cross-app look-up rule" sends a look-up to the likeliest app (people and lists → Sheets; checklists → Docs; what someone wrote → Gmail; meetings and leave → Calendar), routes the result back in `context`, and asks SIR only if no app has it. Questions about several matches still go to SIR. Steps are ordered by dependency (book first, then email the schedule).
+     - *Checks:*
+       - offline scripted test of the em_06 shape (NEED, then a look-up to Sheets, then back with context) and the tool schema (`agent`, optional `context` and `lookup`);
+       - 4 Luna debug runs (`eval/runs/debug_ad`). em_06, amb_02 and tsk_01 passed. em_06 and tsk_01 had failed every run in both harnesses: em_06 used the look-up path and read the Team Directory, and tsk_01 opened the cut-off task with `get_task`.
+       - x_02 failed on a model overlap mistake: Farah was busy 13:30–14:30 in the result it read, and it booked 14:00. The step order was right: the meetings were booked before a single email went out.
 10. **How the harnesses use the Responses API (Luna).**
     - Hermes sends `store: false`, `reasoning.summary: "auto"`, parallel tool calls and `tool_choice: auto`, streams, and passes Luna's encrypted reasoning back on every turn.
     - The graph (LangChain defaults) sends only `reasoning.effort`, doesn't stream, and keeps reasoning items inside the message content that the product code passes along.

@@ -428,6 +428,18 @@ WORKER_HANDOFF_TEMPLATE = (
     "`work_completion` with the result; if part of the request needs another app, say what is left."
 )
 
+# A look-up for another worker: find information only, so nothing is done out of order
+# (e.g. emailing a schedule before the meetings are booked).
+WORKER_LOOKUP_TEMPLATE = (
+    "[Look-up request from supervisor]\n"
+    "User request (the user's exact words, for background only; other agents handle the rest of it):\n{request}\n"
+    "{context}"
+    "\nFind and return only this: {lookup}\n"
+    "Use your tools to look it up. Do not create, change, send or delete anything in this handoff. "
+    "When you are done, call `work_completion` with what you found (the actual names, addresses, dates, "
+    "IDs or text), or say plainly that it is not in your app."
+)
+
 
 def _latest_user_request(state: dict) -> str:
     """The user's latest message, verbatim (user messages are the unnamed HumanMessages)."""
@@ -443,6 +455,7 @@ def route_to_agent(
     tool_call_id: Annotated[str, InjectedToolCallId],
     agent: str,
     context: str = "",
+    lookup: str = "",
 ) -> Command:
     """
     Route the conversation to the correct specialized agent.
@@ -461,6 +474,9 @@ def route_to_agent(
     context: Optional. Only facts the worker cannot find itself: results from earlier
       workers (names, addresses, dates, IDs, text) or what the user said in earlier turns.
       Leave it empty on a first handoff. Never rephrase the request or add instructions.
+    lookup: Optional. Set it only to ask this worker to FIND information another worker
+      needs (e.g. "the names and email addresses of Yadeesh's direct reports"). The worker
+      then only looks it up and changes nothing. Leave it empty for a normal handoff.
     """
     supervisor_closure = ToolMessage(
         content=f"Successfully routed user to {agent}.",
@@ -468,10 +484,12 @@ def route_to_agent(
     )
 
     context_block = f"\nContext from earlier steps:\n{context.strip()}\n" if context and context.strip() else ""
-    worker_seed = HumanMessage(
-        content=WORKER_HANDOFF_TEMPLATE.format(request=_latest_user_request(state), context=context_block),
-        name="supervisor",
-    )
+    request = _latest_user_request(state)
+    if lookup and lookup.strip():
+        seed_text = WORKER_LOOKUP_TEMPLATE.format(request=request, context=context_block, lookup=lookup.strip())
+    else:
+        seed_text = WORKER_HANDOFF_TEMPLATE.format(request=request, context=context_block)
+    worker_seed = HumanMessage(content=seed_text, name="supervisor")
 
     agent_key_map = {
         "communication_agent": "communication_messages",

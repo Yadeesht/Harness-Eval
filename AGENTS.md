@@ -188,6 +188,16 @@ Success rate per harness × model · consistency (tasks passed on all 3 runs) ·
     - Workers now get the user's exact request, an optional data-only `context`, and a fixed "do your part, then report" instruction. The supervisor no longer paraphrases.
     - A multiple-match rule was added to every worker prompt.
     - One amb_02 graph run passed. Details: `harness_notes.md` 9c.
+  - **Luna dev runs (2026-10-03):**
+    - Graph (dev4): 20/30. Hermes (dev5): 18/30. Same settings hash, seed, repo commit and Hermes pin; no fairness warnings.
+    - The graph used about 3x fewer input tokens per run.
+  - **Graph fixes A-D after dev4/dev5:**
+    - recurring meetings are one meeting;
+    - open cut-off items before deciding;
+    - formulas for derived sheet totals;
+    - cross-app look-ups: an optional `lookup` field on `route_to_agent`, "NEED:" hand-backs, and a supervisor look-up rule.
+    - 4 Luna debug runs: em_06, amb_02 and tsk_01 passed; x_02 failed on a model scheduling overlap.
+    - The graph needs a fresh dev run for a comparable number. Details: `harness_notes.md` 9c.
 - [ ] **5. Test run:** freeze everything; 30 test tasks × 2 harnesses × 2 models × 3 runs (360 runs). Verify Luna's reasoning setting on its first run.
 - [ ] **6. Analysis:** metrics above + 2–3 illustrative traces.
 - [ ] **7. Field layer (optional):** 10 tasks on dummy accounts; add observed faults to the fake; test recovery.
