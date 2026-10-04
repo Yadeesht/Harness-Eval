@@ -306,8 +306,9 @@ Success rate per harness · consistency (tasks passed on all 3 runs) · cost per
     - The holiday rule worked: every run that booked put the second handover on Wed 21 Oct.
 - [ ] **7. Field layer (optional):** 10 tasks on dummy accounts; add observed faults to the fake; test recovery.
 - [ ] **8. Regression gate:** baseline comparison script (optional manual GitHub Actions trigger).
-- [ ] **9. Write-up:** question, setup, fairness rules, results, failures, traces, cost, limitations.
-  - First draft 2026-10-04: `eval/design/writeup.md`, with traces in `eval/design/phase5_findings.md`. Waiting for the user's review.
+- [x] **9. Write-up:** question, setup, fairness rules, results, failures, traces, cost, limitations.
+  - Done 2026-10-04: `eval/design/writeup.md` (traces in `eval/design/phase5_findings.md`), plus a root `README.md` with the result, the approach and a repo map, linking to the agent repo (github.com/Yadeesht/Personal-Assistant-Agent).
+  - Phases 7 (field layer) and 8 (regression gate) were skipped by the user's decision.
 
 Update this checklist as phases complete.
 
