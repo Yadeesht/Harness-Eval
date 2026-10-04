@@ -141,7 +141,25 @@ The judge sees only the rubric, the request and the final message, and doesn't k
 - **Judge is Luna,** the agents' own model. It is harness-blind and calibrated, but leans strict.
 - **Tool-call counts aren't fully comparable,** because of Hermes's argument check inside its bridge.
 
-## 8. Reproducing
+## 8. After the test run
+
+After seeing the Phase 5 results, I changed the graph's prompts for its two weak spots:
+- check for newer emails before sending facts taken from a doc or sheet, and ask if they conflict;
+- calendar rules for holidays, overlaps, kinds of meetings and appending descriptions.
+
+I also fixed the app's recursion limit. These changes were designed from the test failures, so any later run on the test tasks is reported here only as a post-test check, never in place of §3.
+
+**Post-test check (graph, the 4 failed tasks × 3 runs): 8/12, against 4/12 in Phase 5.**
+- imp_03 went from 0/3 to 3/3: it reported the conflict and sent nothing.
+- cal_04 went from 1/3 to 3/3.
+- cal_06 went from 1/3 to 2/3.
+- **x_09 went from 1/3 to 0/3.** The new rules over-applied:
+  - the free-time rule skipped a handover at the 11:00 time the user had fixed;
+  - the check-before-sending rule treated an unconfirmed swap request as a contradiction and asked instead of acting.
+
+Rules written from a few failures fix those failures and create new ones elsewhere, the same lesson as the dev-to-test gap. These changes were not checked for regressions on the dev tasks.
+
+## 9. Reproducing
 
 ```powershell
 git checkout phase5-freeze

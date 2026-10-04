@@ -290,6 +290,20 @@ Success rate per harness · consistency (tasks passed on all 3 runs) · cost per
     - *Tool calls per harness:* the workspace calls each model attempted, the ones that reached the server, and harness overhead (routing or tool search). Hermes rejects bad arguments inside its `tool_call` bridge, so those never reach the server or count toward the cap. On dev5 Hermes attempted 15.2 calls per run and 12.1 reached the server; on the graph every call reached it.
     - *Passing normal-task runs that end with a question:* 0 in dev4, dev5 and dev6. There is no separate grader check for this; a question after finished work counts as an offer.
     - *Failure pre-labels:* `failure_labels.csv` next to the records proposes a category for each failed run: `loop`, `didnt_ask`, `wrong_options`, `forced_impossible`, `misreported_impossible`, `unwanted_change`, `asked_unnecessarily`, `premature_finish` or `wrong_result`. Each is confirmed against its trace in `final_label` before it is reported. On the Luna dev runs they match the categories read by hand.
+- **Post-test changes (2026-10-04, at the user's request, after Phase 5 results were seen):** product fixes. The Phase 5 numbers stay the headline, and any re-run is reported separately as post-test.
+  - `main.py`: `recursion_limit` 310, as in the eval. LangGraph's default of 25 ended long tasks with an error in the app. This does not affect eval runs, which already set 310.
+  - Graph prompts, for the two weak spots Phase 5 found (`config/prompts.py`):
+    - *Conflicting sources (imp_03):* the supervisor's "Check-before-sending rule" sends a mail look-up before facts from one app are sent to others. The Gmail worker's "Conflicting sources rule" searches for newer emails before sending such facts. If an email contradicts them, nothing is sent and the user is asked, naming both versions.
+    - *Calendar rules (cal_04, x_09, cal_06; also x_07 as a precaution):* check holiday calendars for every date; compare the chosen slot with every attendee's events; match kinds of meetings by title and purpose, not headcount (a two-person sync is not a 1:1); and `modify_event` replaces the description, so send the old text plus the new line. The real tool replaces it (checked in `calendar_tools.py`).
+  - Checks: the prompts format, `main.py` compiles, and the offline handoff test passes. These are test tasks the changes were designed from, so post-test runs on them are not a clean measurement.
+  - **post1_fixed (graph, the 4 failed test tasks × 3): 8/12.** Phase 5 had 4/12 on the same tasks. The user chose not to run a dev regression check.
+    - imp_03 3/3: reported both versions and asked; nothing sent.
+    - cal_04 3/3: the Brightline sync was kept.
+    - cal_06 2/3: r1 still replaced the description.
+    - x_09 0/3, worse than Phase 5's 1/3. **The new rules caused it:**
+      - in r1 and r3, the free-time rule made it skip the 12 Oct handover because the user had a meeting at the requested 11:00. The prompt fixed the time, so the event should still be made;
+      - in r2, the check-before-sending rule took Neha's unconfirmed swap *request* as a contradiction and asked instead of creating the events.
+    - The holiday rule worked: every run that booked put the second handover on Wed 21 Oct.
 - [ ] **7. Field layer (optional):** 10 tasks on dummy accounts; add observed faults to the fake; test recovery.
 - [ ] **8. Regression gate:** baseline comparison script (optional manual GitHub Actions trigger).
 - [ ] **9. Write-up:** question, setup, fairness rules, results, failures, traces, cost, limitations.

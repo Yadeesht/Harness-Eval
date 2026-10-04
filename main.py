@@ -160,10 +160,13 @@ async def main():
             graph = build_graph(tool_sets, checkpointer)
 
             current_thread_id = str(DEFAULT_THREAD_ID)
+            # LangGraph's default recursion limit (25 steps) ends long multi-app tasks with an error;
+            # 310 matches the eval (3 graph steps per model call x 100 calls + 10).
             run_config = {
                 "configurable": {
                     "thread_id": current_thread_id,
-                }
+                },
+                "recursion_limit": 310,
             }
 
             agent_state = {"last_interaction": 0}
