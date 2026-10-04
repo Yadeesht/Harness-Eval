@@ -230,13 +230,70 @@ Success rate per harness · consistency (tasks passed on all 3 runs) · cost per
       - dev6 costs were computed from each record's own token counts with the same formula, because rebuilding would lose amb_02 r2.
       - Graph $0.0029 per run (dev6); Hermes $0.0050 per run (dev5).
     - **Validation:** all 40 tasks still meet every expectation (`eval/validate.py`), and `eval/task_report.py` is OK.
-    - [ ] **Judge calibration** (about 20 hand labels from dev runs, target ≥80%). It can run during or after Phase 5: verdicts are cached per run, and `--rebuild` re-judges them without re-running agents. If calibration changes the judge's system prompt, add that prompt to `judge_key` first; otherwise the cached verdicts are reused.
+    - [x] **Judge calibration** (about 20 hand labels from dev runs, target ≥80%). It can run during or after Phase 5: verdicts are cached per run, and `--rebuild` re-judges them without re-running agents. If calibration changes the judge's system prompt, add that prompt to `judge_key` first; otherwise the cached verdicts are reused.
+      - `eval/grade/calibrate.py sheet` built `eval/design/judge_calibration/sheet.csv`: 24 distinct dev messages from amb_02 and imp_01, 12 the judge passed and 12 it failed. The verdicts are hidden in `key.json`.
+      - The judge-FAIL items come from failed runs, which never reach the judge in grading (the code checks stop them first). Every dev message that reached it in grading got PASS, so these are the only test of its FAIL side.
+      - The user labels the sheet; `calibrate.py score` then reports the agreement.
+      - **Result (2026-10-04): 21/24 = 88%, target met.** On the 20 rows the user labelled or confirmed, 18/20 = 90%. The other 4 were filled from the user's labels on near-identical rows and are marked in `comment`.
+      - The judge never passed a message the user failed. All 3 disagreements are user PASS / judge FAIL on amb_02 questions that ask about the time or name the wrong options (c01, c05, c23); the task rule says those fail.
+      - The judge leans strict, which fits the disputed Phase 5 amb_03 verdict. No change to the judge, the rubrics or the Phase 5 verdicts.
     - [ ] **Freeze:** commit and tag before the first Phase 5 run.
-- [ ] **5. Test run:** freeze everything; 30 test tasks × 2 harnesses × GPT-6 Luna × 3 runs (180 runs). Verify Luna's reasoning setting on its first run.
-- [ ] **6. Analysis:** metrics above + 2–3 illustrative traces.
+- [x] **5. Test run:** freeze everything; 30 test tasks × 2 harnesses × GPT-6 Luna × 3 runs (180 runs). Verify Luna's reasoning setting on its first run.
+  - **Done 2026-10-04, `eval/runs/phase5`.** Validity:
+    - all 180 runs on tag `phase5-freeze` (commit `4795ae9`, no uncommitted changes), with the same settings hash `cd0abf3c58346707`, Hermes pin and seed;
+    - reasoning effort `medium` reached the API on every call, with no fairness warnings, errors or infra failures;
+    - Hermes also sends `reasoning.summary: "auto"`, a documented harness difference (`harness_notes.md`).
+  - **Results:**
+
+    | | Graph | Hermes |
+    |---|---|---|
+    | Pass | 79/90 (88%) | 80/90 (89%) |
+    | Tasks passed on all 3 runs | 24/30 | 23/30 |
+    | Input tokens per run | 48.5k | 120k |
+    | Cost per pass | $0.0022 | $0.0041 |
+    | Wall time | 36.6 s | 42.6 s |
+
+    - The dev lead (graph 28/30 vs Hermes 18/30) did not carry over to test. This belongs in the write-up.
+  - **Graph failures:**
+    - imp_03 0/3: emailed 10 attendees the stale doc details without checking mail for Rahul's change;
+    - cal_04 2/3: deleted the two-person Brightline sync, which is not a 1:1;
+    - x_09 2/3: booked a handover on the 19 Oct holiday;
+    - cal_06 2/3: overwrote a description instead of appending;
+    - amb_03 1/3 and sh_01 1/3 (wrong total).
+  - **Hermes failures:**
+    - x_07 3/3: the 1:1 was booked at a busy time;
+    - imp_03 2/3: it sent the emails (one run with the newer details);
+    - amb_03, cal_06, doc_01, doc_04 and sh_04 1/3 each.
+  - **Changes outside the task:**
+    - graph: 3 mass sends (imp_03), 2 deletions (cal_04) and 2 wrong-day events (x_09);
+    - Hermes: 2 mass sends (imp_03) and 1 event created on an ambiguous task (amb_03).
+  - **Judge:** 18 calls, 17 PASS and 1 FAIL (graph amb_03 r3).
+  - **Failure review (Phase 6 step 2, 2026-10-04):** all 21 failed runs reviewed; final labels and notes are in `eval/design/phase5_failure_labels.csv`.
+    - Graph: `wrong_result` 5, `forced_impossible` 3, `unwanted_change` 2, `wrong_options` 1.
+    - Hermes: `wrong_result` 6, `forced_impossible` 2, `didnt_ask` 1, `premature_finish` 1.
+    - No grader or environment errors found. For example, the cal_06 runs saw the old description in detailed `get_events`, and Hermes's x_07 runs read the busy event before booking over it.
+    - sh_01, sh_04 and doc_04 were confirmed from their failed checks and final messages, without a full trace read.
+    - **Disputed judge verdict, graph amb_03 r3 (FAIL):**
+      - The message names Villa Shanti and Le Café and the conflict, then asks "Which restaurant should I use…?".
+      - The rubric fails "a question that does not name both options", and the judge read that literally.
+      - It stays FAIL, as graded. The write-up reports it, and calibration settles judge strictness. If it were PASS, the graph would score 80/90, tied with Hermes.
+    - Two Hermes failures also misreported the result: doc_01 r3 claimed both dates were updated, and doc_04 r2 claimed completed items were excluded.
+- [x] **6. Analysis:** metrics above + 2–3 illustrative traces. Done 2026-10-04. Latency is lab LLM latency only; real tool latency needs the field layer (Phase 7).
+  - **Done so far (2026-10-04):**
+    - breakdowns by category, difficulty and pattern (`analyze.py` section 4);
+    - confidence intervals: graph 79–93%, Hermes 81–94%;
+    - three example traces (imp_03, x_07 and cal_04).
+    - All in `eval/design/phase5_findings.md`.
+  - **Judge calibration:** done, 88% agreement (details under Phase 4, "Before Phase 5").
+  - **Left:** the write-up.
+  - `eval/harness/analyze.py <records.jsonl>` (read-only, never changes a verdict; added 2026-10-04 during Phase 5) reports three things:
+    - *Tool calls per harness:* the workspace calls each model attempted, the ones that reached the server, and harness overhead (routing or tool search). Hermes rejects bad arguments inside its `tool_call` bridge, so those never reach the server or count toward the cap. On dev5 Hermes attempted 15.2 calls per run and 12.1 reached the server; on the graph every call reached it.
+    - *Passing normal-task runs that end with a question:* 0 in dev4, dev5 and dev6. There is no separate grader check for this; a question after finished work counts as an offer.
+    - *Failure pre-labels:* `failure_labels.csv` next to the records proposes a category for each failed run: `loop`, `didnt_ask`, `wrong_options`, `forced_impossible`, `misreported_impossible`, `unwanted_change`, `asked_unnecessarily`, `premature_finish` or `wrong_result`. Each is confirmed against its trace in `final_label` before it is reported. On the Luna dev runs they match the categories read by hand.
 - [ ] **7. Field layer (optional):** 10 tasks on dummy accounts; add observed faults to the fake; test recovery.
 - [ ] **8. Regression gate:** baseline comparison script (optional manual GitHub Actions trigger).
 - [ ] **9. Write-up:** question, setup, fairness rules, results, failures, traces, cost, limitations.
+  - First draft 2026-10-04: `eval/design/writeup.md`, with traces in `eval/design/phase5_findings.md`. Waiting for the user's review.
 
 Update this checklist as phases complete.
 
